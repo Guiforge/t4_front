@@ -24,6 +24,7 @@
                 class="tag is-primary"
               >
                 {{ file.name }}
+                {{ formatSize(file.size) }}
                 <button
                   class="delete is-small"
                   type="button"
@@ -36,7 +37,7 @@
             TOTO
           </div>
           <br />
-          <b-button type="is-primary" @click="process_files()">
+          <b-button type="is-primary" @click="zip_files()">
             Upload
           </b-button>
         </div>
@@ -46,7 +47,8 @@
 </template>
 
 <script>
-import encrypt from '../zip-encrypt/encrypt'
+import zipFiles from '../zip-encrypt/zip'
+import formatSizeImp from '../utils/formatSize'
 
 export default {
   name: 'Upload',
@@ -54,14 +56,26 @@ export default {
   data() {
     return {
       dropFiles: [],
+      zipGlob: null,
     }
   },
   methods: {
     deleteDropFile(index) {
       this.dropFiles.splice(index, 1)
     },
-    process_files() {
-      encrypt(this.dropFiles)
+    formatSize(byte) {
+      return formatSizeImp(byte, 10)
+    },
+    zip_files() {
+      zipFiles(this.dropFiles)
+        .then((zip) => {
+          this.zipGlob = zip
+          console.log('Bravo vous avez un super zip')
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+      // encrypt(this.dropFiles)
     },
   },
 }
