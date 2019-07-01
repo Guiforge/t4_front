@@ -4,12 +4,12 @@
       <div class="media-content">
         <div class="content" style="text-align: center">
           <h1>Uploads your files!</h1>
-          <vue-dropzone
+          <!-- <vue-dropzone
             id="dropZone"
             ref="MyDropZone"
             :options="dropzoneOptions"
             :use-custom-slot="true"
-            @vdropzone-file-added="process_files"
+            @vdropzone-file-added="toto"
           >
             <div class="dropzone-custom-content">
               <h3 class="dropzone-custom-title">
@@ -19,7 +19,28 @@
                 ...or click to select a file from your computer
               </div>
             </div>
-          </vue-dropzone>
+          </vue-dropzone> -->
+          <div class="file has-name is-fullwidth">
+            <label class="file-label">
+              <input
+                ref="inputFile"
+                class="file-input"
+                type="file"
+                @change="toto"
+              />
+              <span class="file-cta">
+                <span class="file-icon">
+                  <i class="fas fa-upload"></i>
+                </span>
+                <span class="file-label">
+                  Choose a file…
+                </span>
+              </span>
+              <span class="file-name">
+                {{ toto() }}
+              </span>
+            </label>
+          </div>
           <br />
           <b-button type="is-primary" @click="process_files()">
             Upload
@@ -43,6 +64,7 @@ export default {
   data() {
     return {
       dropzoneOptions: {
+        maxFiles: 1,
         url: '/fake',
         thumbnailWidth: 150,
         maxFilesize: 0.5,
@@ -53,12 +75,24 @@ export default {
     }
   },
   methods: {
-    process_files(test) {
-      console.log(test)
+    process_files() {
       const drop = this.$refs.MyDropZone
-      encrypt(drop.getQueuedFiles()[0])
-      console.log(drop.getUploadingFiles(), drop.getQueuedFiles())
+      encrypt(drop.getQueuedFiles())
       // drop.processQueue()
+    },
+    toto() {
+      /* eslint-disable */
+      let ret = "choose file"
+      const inp = this.$refs.inputFile
+      if (inp && inp.files) {
+        console.log(inp.files);
+        for (let i = 0; i < inp.files.length; i++) {
+          ret += inp.files[i].name;
+          
+        }
+        console.log(ret);
+      }
+      return ret
     },
   },
 }
