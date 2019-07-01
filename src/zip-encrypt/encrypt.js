@@ -1,4 +1,12 @@
-export default function encrypt(files) {
+function encrypt(files) {
   console.log(files)
-  console.log(files[0].fullPath)
+  const readStream = new FileReader()
+
+  // eslint-disable-next-line
+  readStream.onload = function(chunk) {
+    console.log('1', readStream.result)
+  }
+  readStream.readAsBinaryString(files[0])
 }
+
+export default encrypt
