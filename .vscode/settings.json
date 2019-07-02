@@ -18,6 +18,14 @@
   "files.watcherExclude": {
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
-    "**/node_modules/*/**": true
+    "**/node_modules/*/**": true,
+    ".DS_Store": true,
+    "**/dist/**": true,
+    "npm-debug.log*": true, 
+    "yarn-debug.log*": true,
+    "yarn-error.log*": true,
+    "**/test/unit/coverage/**": true,
+    "**//test/e2e/reports/**": true,
+    "selenium-debug.log" : true,
   }
 }

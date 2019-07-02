@@ -17,29 +17,60 @@
                 </section>
               </b-upload>
             </b-field>
-            <div class="tags">
-              <span
-                v-for="(file, index) in dropFiles"
-                :key="index"
-                class="tag is-primary"
-              >
-                {{ file.name }}
-                {{ formatSize(file.size) }}
-                <button
-                  class="delete is-small"
-                  type="button"
-                  @click="deleteDropFile(index)"
-                ></button>
-              </span>
+            <section>
+              <div v-if="dropFiles.length" class="container">
+                <div class="notification">
+                  <div class="tags">
+                    <b-tag
+                      v-for="(file, index) in dropFiles"
+                      :key="index"
+                      type="is-info"
+                      size="is-large"
+                    >
+                      {{ file.name }}
+                      {{ formatSize(file.size) }}
+                      <b-button
+                        size="is-small"
+                        class="delete"
+                        delete
+                        @click="deleteDropFile(index)"
+                      >
+                      </b-button>
+                    </b-tag>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <div v-if="dropFiles.length" class="container">
+              <div class="notification">
+                <div class="field">
+                  <b-switch>remove meta data</b-switch>
+                </div>
+                <b-field label="Number of days">
+                  <b-numberinput
+                    v-model="option.day"
+                    min="1"
+                    max="10"
+                    controls-rounded
+                  >
+                  </b-numberinput>
+                </b-field>
+                <b-field label="Number of Download">
+                  <b-numberinput
+                    v-model="option.download"
+                    min="1"
+                    max="10"
+                    controls-rounded
+                  >
+                  </b-numberinput>
+                </b-field>
+              </div>
             </div>
+            <br />
+            <b-button type="is-primary" @click="zip_files()">
+              Upload
+            </b-button>
           </section>
-          <div v-if="dropFiles.length">
-            TOTO
-          </div>
-          <br />
-          <b-button type="is-primary" @click="zip_files()">
-            Upload
-          </b-button>
         </div>
       </div>
     </article>
@@ -55,6 +86,10 @@ export default {
 
   data() {
     return {
+      option: {
+        download: 1,
+        day: 1,
+      },
       dropFiles: [],
       zipGlob: null,
     }
