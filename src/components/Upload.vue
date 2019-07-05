@@ -43,9 +43,9 @@
             </section>
             <div v-if="dropFiles.length" class="container">
               <div class="notification">
-                <div class="field">
+                <!-- <div class="field">
                   <b-switch>remove meta data</b-switch>
-                </div>
+                </div> -->
                 <b-field label="Number of days">
                   <b-numberinput
                     v-model="option.day"
@@ -55,9 +55,9 @@
                   >
                   </b-numberinput>
                 </b-field>
-                <b-field label="Number of Download">
+                <b-field label="Number of Upload">
                   <b-numberinput
-                    v-model="option.download"
+                    v-model="option.Upload"
                     min="1"
                     max="10"
                     controls-rounded
@@ -67,28 +67,36 @@
               </div>
             </div>
             <br />
-            <b-button type="is-primary" @click="zip_files()">
+            <b-button type="is-primary" @click="process()">
               Upload
             </b-button>
           </section>
         </div>
       </div>
     </article>
+    <b-loading
+      :is-full-page="true"
+      :active.sync="isLoading"
+      :can-cancel="true"
+    ></b-loading>
   </div>
 </template>
 
 <script>
 import zipFiles from '../zip-encrypt/zip'
 import formatSizeImp from '../utils/formatSize'
-import encrypt from '../zip-encrypt/encrypt'
+import KeysConstruct from '../zip-encrypt/keys'
+import EncryptConstruct from '../zip-encrypt/encrypt'
+import { Sender } from '../utils/sendUpload'
 
 export default {
   name: 'Upload',
 
   data() {
     return {
+      isLoading: false,
       option: {
-        download: 1,
+        Upload: 1,
         day: 1,
       },
       dropFiles: [],
@@ -96,22 +104,63 @@ export default {
     }
   },
   methods: {
+    toastOpen(msg, type) {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      this.$toast.open({
+        message: msg,
+        type,
+      })
+    },
+    toastSuccess(msg) {
+      this.toastOpen(msg, 'is-success')
+    },
+    toastDanger(msg) {
+      this.toastOpen(msg, 'is-danger')
+    },
     deleteDropFile(index) {
       this.dropFiles.splice(index, 1)
     },
     formatSize(byte) {
       return formatSizeImp(byte, 10)
     },
-    zip_files() {
+    process() {
+      this.isLoading = true
       zipFiles(this.dropFiles)
         .then((zip) => {
           this.zipGlob = zip
-          console.log('Bravo vous avez un super zip')
+            .generateAsync({
+              name: 'hello.zip',
+              type: 'arraybuffer',
+              compression: 'DEFLATE',
+              compressionOptions: {
+                level: 9,
+              },
+            })
+            .then((zipfile) => {
+              this.toastSuccess('whe have zip all file with super encryption')
+              const keys = new KeysConstruct()
+              const encrypt = new EncryptConstruct(
+                keys,
+                { filesName: this.dropFiles },
+                zipfile,
+              )
+              const sender = new Sender(keys, encrypt, this.option)
+              sender
+                .send()
+                .then(() => {
+                  this.isLoading = false
+                  this.toastSuccess('It is send')
+                })
+                .catch(() => {
+                  this.isLoading = false
+                  this.toastDanger('Send fail')
+                })
+            })
         })
-        .catch((err) => {
-          console.log(err)
+        .catch((fileName) => {
+          this.toastDanger(`Error in ${fileName}`)
         })
-      encrypt(this.dropFiles)
+      // encrypt(this.dropFiles)
     },
   },
 }

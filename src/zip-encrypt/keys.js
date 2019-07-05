@@ -1,33 +1,35 @@
-const encode = new TextEncoder()
+import b64 from '../utils/base64'
+
+const encoder = new TextEncoder()
 
 export default class Keys {
   constructor(secret) {
     if (secret) {
-      const secretRaw = encode.encode(secret)
+      this.secretRaw = encoder.encode(secret)
       this.promiseDeriveKey = crypto.subtle.importKey(
         'raw',
-        secretRaw,
+        this.secretRaw,
         { name: 'PBKDF2' },
         false,
         ['deriveKey'],
       )
     } else {
-      const secretRaw = crypto.getRandomValues(new Uint8Array(96))
+      this.secretRaw = crypto.getRandomValues(new Uint8Array(96))
       this.promiseDeriveKey = crypto.subtle.importKey(
         'raw',
-        secretRaw,
+        this.secretRaw,
         { name: 'HKDF' }, // best for non password
         false,
         ['deriveKey'],
       )
     }
     this.promiseMetaKey = this.promiseDeriveKey.then((deriveKey) => {
-      crypto.subtle.deriveKey(
+      const promiseDeriveKey = crypto.subtle.deriveKey(
         {
           name: 'HKDF',
           hash: 'SHA-256',
           salt: crypto.getRandomValues(new Uint8Array(256)),
-          info: encode.encode('meta'),
+          info: encoder.encode('meta'),
         },
         deriveKey,
         {
@@ -37,15 +39,16 @@ export default class Keys {
         false,
         ['decrypt', 'encrypt'],
       )
+      return promiseDeriveKey
     })
 
     this.promiseFileKey = this.promiseDeriveKey.then((deriveKey) => {
-      crypto.subtle.deriveKey(
+      const promiseDeriveKey = crypto.subtle.deriveKey(
         {
           name: 'HKDF',
           hash: 'SHA-256',
           salt: crypto.getRandomValues(new Uint8Array(256)),
-          info: encode.encode('meta'),
+          info: encoder.encode('meta'),
         },
         deriveKey,
         {
@@ -55,15 +58,16 @@ export default class Keys {
         false,
         ['decrypt', 'encrypt'],
       )
+      return promiseDeriveKey
     })
 
     this.promiseSignKey = this.promiseDeriveKey.then((deriveKey) => {
-      crypto.subtle.deriveKey(
+      const promiseDeriveKey = crypto.subtle.deriveKey(
         {
           name: 'HKDF',
           hash: 'SHA-256',
           salt: crypto.getRandomValues(new Uint8Array(256)),
-          info: encode.encode('meta'),
+          info: encoder.encode('meta'),
         },
         deriveKey,
         {
@@ -73,6 +77,26 @@ export default class Keys {
         false,
         ['sign'],
       )
+      return promiseDeriveKey
     })
+  }
+
+  async getKeyFile() {
+    const key = await this.promiseFileKey
+    return key
+  }
+
+  async getKeyMeta() {
+    const key = await this.promiseMetaKey
+    return key
+  }
+
+  async getKeySign() {
+    const key = await this.promiseSignKey
+    return key
+  }
+
+  getSecret() {
+    return b64.encode(this.secretRaw)
   }
 }

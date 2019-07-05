@@ -7,10 +7,10 @@ async function reader(zip, file) {
     // eslint-disable-next-line
     readStream.onload = function(chunk) {
       zip.file(file.name, readStream.result)
-      resolve(file.name, true)
+      resolve(file.name)
     }
-    readStream.onerror = (error) => {
-      reject(file.name, error)
+    readStream.onerror = () => {
+      reject(file.name)
     }
     readStream.readAsArrayBuffer(file)
   })
@@ -29,10 +29,10 @@ export default async function zipFiles(files) {
     // Wait ALL
     Promise.all(proms)
       .then(() => {
-        resolve('success', zip)
+        resolve(zip)
       })
-      .catch((err) => {
-        reject(err)
+      .catch((fileName) => {
+        reject(fileName)
       })
   })
 }
