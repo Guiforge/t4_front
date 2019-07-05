@@ -1,5 +1,3 @@
-// import { saveAs } from 'file-saver'
-
 const JSZip = require('jszip')
 
 async function reader(zip, file) {
@@ -8,12 +6,11 @@ async function reader(zip, file) {
 
     // eslint-disable-next-line
     readStream.onload = function(chunk) {
-      console.log('ret', readStream.result)
       zip.file(file.name, readStream.result)
-      resolve(true)
+      resolve(file.name, true)
     }
     readStream.onerror = (error) => {
-      reject(error)
+      reject(file.name, error)
     }
     readStream.readAsArrayBuffer(file)
   })
@@ -31,8 +28,7 @@ export default async function zipFiles(files) {
 
     // Wait ALL
     Promise.all(proms)
-      .then((res) => {
-        console.log('success', res)
+      .then(() => {
         resolve('success', zip)
       })
       .catch((err) => {

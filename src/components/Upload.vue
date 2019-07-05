@@ -27,8 +27,8 @@
                       type="is-info"
                       size="is-large"
                     >
-                      {{ file.name }}
-                      {{ formatSize(file.size) }}
+                      <strong>{{ file.name }}</strong>
+                      <small> {{ formatSize(file.size) }}</small>
                       <b-button
                         size="is-small"
                         class="delete"
@@ -80,6 +80,7 @@
 <script>
 import zipFiles from '../zip-encrypt/zip'
 import formatSizeImp from '../utils/formatSize'
+import encrypt from '../zip-encrypt/encrypt'
 
 export default {
   name: 'Upload',
@@ -110,7 +111,7 @@ export default {
         .catch((err) => {
           console.log(err)
         })
-      // encrypt(this.dropFiles)
+      encrypt(this.dropFiles)
     },
   },
 }

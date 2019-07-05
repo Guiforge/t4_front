@@ -1,5 +1,8 @@
+import Keys from './keys'
+
 function encrypt(files) {
-  console.log(files)
+  const test = new Keys()
+  console.log(files, test)
 }
 
 export default encrypt
