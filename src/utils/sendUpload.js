@@ -1,3 +1,5 @@
+// import axios from 'axios'
+
 // eslint-disable-next-line import/prefer-default-export
 export class Sender {
   constructor(keys, encrypt, option) {
@@ -6,7 +8,7 @@ export class Sender {
     this.option = option
   }
 
-  async send() {
+  async send(socket) {
     return new Promise((resolve, reject) => {
       const data = {}
       data.option = this.option
@@ -23,6 +25,8 @@ export class Sender {
                 .then((keySign) => {
                   data.keySign = keySign
                   console.log(data)
+                  console.log(JSON.stringify(data, null, 2))
+                  socket.emit('data', data)
                   resolve()
                 })
                 .catch((err) => {

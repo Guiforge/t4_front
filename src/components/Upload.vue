@@ -104,7 +104,7 @@
                 </div>
               </div>
             </section>
-            <div v-if="dropFiles.length" class="container">
+            <!-- <div v-if="dropFiles.length" class="container">
               <div class="notification">
                 <b-field label="Number of days">
                   <b-numberinput
@@ -125,7 +125,7 @@
                   </b-numberinput>
                 </b-field>
               </div>
-            </div>
+            </div> -->
             <br />
             <b-button type="is-primary" @click="process()">
               Upload
@@ -165,6 +165,17 @@ export default {
       dropFiles: [],
     }
   },
+  // sockets: {
+  //   connect() {
+  //     console.log('socket connected')
+  //   },
+  //   customEmit(data) {
+  //     console.log(
+  //       'this method was fired by the socket server. eg: io.emit("customEmit", data)',
+  //       data,
+  //     )
+  //   },
+  // },
   methods: {
     changeStep(isAdd) {
       if (isAdd) {
@@ -223,7 +234,7 @@ export default {
               )
               const sender = new Sender(keys, encrypt, this.option)
               sender
-                .send()
+                .send(this.$socket)
                 .then((url) => {
                   this.isLoading = false
                   this.url = `${url}#${keys.getSecret()}`

@@ -19,8 +19,10 @@
     "ajv": "^6.10.0",
     "buefy": "^0.7.8",
     "jszip": "^3.2.1",
+    "socket.io": "^2.2.0",
     "vue": "^2.6.10",
-    "vue-router": "^3.0.1"
+    "vue-router": "^3.0.1",
+    "vue-socket.io": "^3.0.7"
   },
   "devDependencies": {
     "@babel/polyfill": "^7.4.4",

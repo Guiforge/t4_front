@@ -14,5 +14,12 @@ export default {
   name: 'Footer',
 }
 </script>
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped></style>
+<style scoped>
+.footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  padding: 1em;
+}
+</style>
