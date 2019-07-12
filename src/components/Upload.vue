@@ -144,11 +144,9 @@
 </template>
 
 <script>
-import zipFiles from '../zip-encrypt/zip'
 import formatSizeImp from '../utils/formatSize'
-import KeysConstruct from '../zip-encrypt/keys'
-import EncryptConstruct from '../zip-encrypt/encrypt'
-import { Sender } from '../utils/sendUpload'
+import Process from '../zip-encrypt/process'
+import send from '../utils/sendUpload'
 
 export default {
   name: 'Upload',
@@ -165,17 +163,6 @@ export default {
       dropFiles: [],
     }
   },
-  // sockets: {
-  //   connect() {
-  //     console.log('socket connected')
-  //   },
-  //   customEmit(data) {
-  //     console.log(
-  //       'this method was fired by the socket server. eg: io.emit("customEmit", data)',
-  //       data,
-  //     )
-  //   },
-  // },
   methods: {
     changeStep(isAdd) {
       if (isAdd) {
@@ -210,45 +197,23 @@ export default {
     formatSize(byte) {
       return formatSizeImp(byte, 10)
     },
-    process() {
+    async process() {
       this.isLoading = true
-      zipFiles(this.dropFiles)
-        .then((zip) => {
-          zip
-            .generateAsync({
-              name: 'Zip.zip',
-              type: 'arraybuffer',
-              compression: 'DEFLATE',
-              compressionOptions: {
-                level: 9,
-              },
-            })
-            .then((zipfile) => {
-              this.step = 2
-              this.toastSuccess('whe have zip all file with super encryption')
-              const keys = new KeysConstruct()
-              const encrypt = new EncryptConstruct(
-                keys,
-                { filesName: this.dropFiles },
-                zipfile,
-              )
-              const sender = new Sender(keys, encrypt, this.option)
-              sender
-                .send(this.$socket)
-                .then((url) => {
-                  this.isLoading = false
-                  this.url = `${url}#${keys.getSecret()}`
-                  this.toastSuccess('It is send')
-                })
-                .catch(() => {
-                  this.isLoading = false
-                  this.toastDanger('Send fail')
-                })
-            })
-        })
-        .catch((fileName) => {
-          this.toastDanger(`Error in ${fileName}`)
-        })
+      try {
+        const proc = new Process(
+          this.dropFiles,
+          this.toastSuccess,
+          this.toastDanger,
+        )
+        const data = await proc.getData()
+        this.toastSuccess('data encript !')
+        await send(this.$socket, data)
+        this.toastSuccess('Sent !!')
+      } catch (error) {
+        this.toastDanger(`Fail: ${error}`)
+        console.error(error)
+      }
+      this.isLoading = false
     },
   },
 }

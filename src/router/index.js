@@ -1,11 +1,13 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+import getUrl from '../utils/getUrl'
 import HelloWorld from '../components/HelloWorld.vue'
 import Upload from '../components/Upload.vue'
 import Download from '../components/Download.vue'
 import NotFound from '../components/404.vue'
 
 Vue.use(Router)
+const subPath = getUrl.subPath
 
 export default new Router({
   routes: [
@@ -20,12 +22,12 @@ export default new Router({
       component: HelloWorld,
     },
     {
-      path: '/upload',
+      path: subPath.upload,
       name: 'Upload',
       component: Upload,
     },
     {
-      path: '/D/:id',
+      path: `${subPath.download}:id`,
       name: 'Download',
       component: Download,
       props: true,

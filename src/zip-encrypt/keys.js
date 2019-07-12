@@ -82,18 +82,30 @@ export default class Keys {
   }
 
   async getKeyFile() {
-    const key = await this.promiseFileKey
-    return key
+    try {
+      const key = await this.promiseFileKey
+      return key
+    } catch (error) {
+      throw new Error('Cannot create crypto key')
+    }
   }
 
   async getKeyMeta() {
-    const key = await this.promiseMetaKey
-    return key
+    try {
+      const key = await this.promiseMetaKey
+      return key
+    } catch (error) {
+      throw new Error('Cannot create crypto key')
+    }
   }
 
   async getKeySign() {
-    const key = await this.promiseSignKey
-    return key
+    try {
+      const key = await this.promiseSignKey
+      return key
+    } catch (error) {
+      throw new Error('Cannot create crypto key')
+    }
   }
 
   getSecret() {

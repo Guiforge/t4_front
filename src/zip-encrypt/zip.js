@@ -10,7 +10,7 @@ async function reader(zip, file) {
       resolve(file.name)
     }
     readStream.onerror = () => {
-      reject(file.name)
+      reject(Error(`Cannot read: ${file.name}`))
     }
     readStream.readAsArrayBuffer(file)
   })
@@ -29,10 +29,24 @@ export default async function zipFiles(files) {
     // Wait ALL
     Promise.all(proms)
       .then(() => {
-        resolve(zip)
+        zip
+          .generateAsync({
+            name: 'Zip.zip',
+            type: 'arraybuffer',
+            compression: 'DEFLATE',
+            compressionOptions: {
+              level: 9,
+            },
+          })
+          .then((zipfile) => {
+            resolve(zipfile)
+          })
+          .catch(() => {
+            reject(Error('Cannot Zip'))
+          })
       })
-      .catch((fileName) => {
-        reject(fileName)
+      .catch((err) => {
+        reject(err)
       })
   })
 }
