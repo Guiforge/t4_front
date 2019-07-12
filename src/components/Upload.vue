@@ -147,6 +147,7 @@
 import formatSizeImp from '../utils/formatSize'
 import Process from '../zip-encrypt/process'
 import send from '../utils/sendUpload'
+import getUrl from '../utils/getUrl'
 
 export default {
   name: 'Upload',
@@ -206,12 +207,16 @@ export default {
           this.toastDanger,
         )
         const data = await proc.getData()
-        this.toastSuccess('data encript !')
-        await send(this.$socket, data)
+        const idFile = await send(this.$socket, data)
+        this.url = `${getUrl.download()}${idFile}#${await proc.keys.getSecret()}`
+        this.step = 2
         this.toastSuccess('Sent !!')
       } catch (error) {
-        this.toastDanger(`Fail: ${error}`)
-        console.error(error)
+        if (`${error.name}` === 'TypeError') {
+          this.toastDanger('Intern Error')
+        } else {
+          this.toastDanger(`${error}`)
+        }
       }
       this.isLoading = false
     },

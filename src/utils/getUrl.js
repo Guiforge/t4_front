@@ -3,11 +3,11 @@ const subPath = {
   upload: '/upload',
 }
 
-function getUrlDownload() {
-  return window.location.origin + subPath.download
+function download() {
+  return `${window.location.origin}#${subPath.download}`
 }
 
 export default {
-  getUrlDownload,
+  download,
   subPath,
 }
