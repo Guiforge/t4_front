@@ -3,11 +3,10 @@ import KeysConstruct from '../zip-encrypt/keys'
 import EncryptConstruct from '../zip-encrypt/encrypt'
 
 export default class processData {
-  constructor(files, success, danger) {
+  constructor(files) {
     this.files = files
     this.keys = new KeysConstruct()
-    this.success = success
-    this.danger = danger
+    this.data = this.dataCreator()
   }
 
   async getEncrypt() {
@@ -17,7 +16,7 @@ export default class processData {
     return enc
   }
 
-  async getData() {
+  async dataCreator() {
     const data = {}
     data.option = this.option
     const zipfile = await zipFiles(this.files)

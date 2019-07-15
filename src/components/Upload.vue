@@ -2,7 +2,7 @@
   <div class="box" style="margin:2em">
     <!-- Display Step-->
     <section>
-      <b-steps :has-navigation="false" v-model="step" size="is-large">
+      <b-steps :has-navigation="false" v-model="step" style="overflow: auto;">
         <b-step-item label="Import Files" icon="file-import"></b-step-item>
         <b-step-item label="Upload" icon="upload"></b-step-item>
         <b-step-item label="Share it" icon="paper-plane"></b-step-item>
@@ -56,7 +56,7 @@
 
     <!-- Step One -->
     <article v-else class="media">
-      <div class="media-content">
+      <div class="media-content" style="width: -webkit-fill-available;">
         <div class="content" style="text-align: center">
           <h1>Uploads your files!</h1>
           <section>
@@ -78,54 +78,44 @@
               </b-upload>
             </b-field>
             <section>
-              <div v-if="dropFiles.length" class="container">
-                <div class="notification">
-                  <div class="tags">
-                    <b-tag
-                      v-for="(file, index) in dropFiles"
-                      :key="index"
-                      type="is-info"
-                      size="is-large"
-                    >
-                      <strong>{{ file.name }}</strong>
-                      <small> {{ formatSize(file.size) }}</small>
-                      <b-button
-                        size="is-small"
-                        class="delete"
-                        delete
-                        @click="
-                          deleteDropFile(index)
-                          changeStep(false)
-                        "
-                      >
-                      </b-button>
-                    </b-tag>
-                  </div>
-                </div>
+              <div v-if="dropFiles.length">
+                <section>
+                  <b-notification
+                    v-for="(file, index) in dropFiles"
+                    :key="index"
+                    type="is-info"
+                    aria-close-label="Close notification"
+                    @close="
+                      deleteDropFile(index)
+                      changeStep(false)
+                    "
+                  >
+                    <strong>{{ file.name }}</strong>
+                    <small> {{ formatSize(file.size) }}</small>
+                  </b-notification>
+                </section>
               </div>
             </section>
-            <!-- <div v-if="dropFiles.length" class="container">
-              <div class="notification">
-                <b-field label="Number of days">
-                  <b-numberinput
-                    v-model="option.day"
-                    min="1"
-                    max="10"
-                    controls-rounded
-                  >
-                  </b-numberinput>
-                </b-field>
-                <b-field label="Number of download">
-                  <b-numberinput
-                    v-model="option.download"
-                    min="1"
-                    max="10"
-                    controls-rounded
-                  >
-                  </b-numberinput>
-                </b-field>
-              </div>
-            </div> -->
+            <div v-if="dropFiles.length" class="container">
+              <b-field label="Number of days">
+                <b-numberinput
+                  v-model="option.day"
+                  min="1"
+                  max="10"
+                  controls-rounded
+                >
+                </b-numberinput>
+              </b-field>
+              <b-field label="Number of download">
+                <b-numberinput
+                  v-model="option.download"
+                  min="1"
+                  max="10"
+                  controls-rounded
+                >
+                </b-numberinput>
+              </b-field>
+            </div>
             <br />
             <b-button type="is-primary" @click="process()">
               Upload
@@ -146,7 +136,7 @@
 <script>
 import formatSizeImp from '../utils/formatSize'
 import Process from '../zip-encrypt/process'
-import send from '../utils/sendUpload'
+import sender from '../utils/sendUpload'
 import getUrl from '../utils/getUrl'
 
 export default {
@@ -161,6 +151,7 @@ export default {
         download: 1,
         day: 1,
       },
+      processObject: null,
       dropFiles: [],
     }
   },
@@ -201,17 +192,24 @@ export default {
     async process() {
       this.isLoading = true
       try {
-        const proc = new Process(
-          this.dropFiles,
-          this.toastSuccess,
-          this.toastDanger,
-        )
-        const data = await proc.getData()
-        const idFile = await send(data)
-        this.url = `${getUrl.download()}${idFile}#${await proc.keys.getSecret()}`
+        if (
+          !this.processObject ||
+          this.processObject.files !== this.dropFiles
+        ) {
+          this.processObject = new Process(
+            this.dropFiles,
+            this.toastSuccess,
+            this.toastDanger,
+          )
+        }
+        const data = await this.processObject.data
+        const idFile = await sender.send(data)
+
+        this.url = `${getUrl.download()}${idFile}#${await this.processObject.keys.getSecret()}`
         this.step = 2
         this.toastSuccess('Sent !!')
       } catch (error) {
+        console.log(error)
         if (`${error.name}` === 'TypeError') {
           this.toastDanger('Intern Error')
         } else {
@@ -224,3 +222,9 @@ export default {
   },
 }
 </script>
+<style>
+overFlow_perso {
+  width: -webkit-fill-available;
+  overflow: hidden;
+}
+</style>
