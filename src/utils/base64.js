@@ -1,9 +1,13 @@
-function encode(str) {
-  return window.btoa(unescape(encodeURIComponent(str)))
+async function encode(str) {
+  return new Promise((resolve) => {
+    resolve(window.btoa(unescape(encodeURIComponent(str))))
+  })
 }
 
-function decode(str) {
-  return decodeURIComponent(escape(window.atob(str)))
+async function decode(str) {
+  return new Promise((resolve) => {
+    resolve(decodeURIComponent(escape(window.atob(str))))
+  })
 }
 
 export default {

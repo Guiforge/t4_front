@@ -74,7 +74,7 @@ export default class Keys {
           name: 'HMAC',
           hash: 'SHA-256',
         },
-        false,
+        true,
         ['sign'],
       )
       return promiseDeriveKey
@@ -108,7 +108,13 @@ export default class Keys {
     }
   }
 
-  getSecret() {
+  async exportKeySign() {
+    const key = await this.getKeySign()
+    const exp = await crypto.subtle.exportKey('raw', key)
+    return exp
+  }
+
+  async getSecret() {
     return b64.encode(this.secretRaw)
   }
 }

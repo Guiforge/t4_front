@@ -207,7 +207,7 @@ export default {
           this.toastDanger,
         )
         const data = await proc.getData()
-        const idFile = await send(this.$socket, data)
+        const idFile = await send(data)
         this.url = `${getUrl.download()}${idFile}#${await proc.keys.getSecret()}`
         this.step = 2
         this.toastSuccess('Sent !!')
@@ -215,6 +215,7 @@ export default {
         if (`${error.name}` === 'TypeError') {
           this.toastDanger('Intern Error')
         } else {
+          console.error(error)
           this.toastDanger(`${error}`)
         }
       }
