@@ -19,9 +19,8 @@ async function send(data, onProgress = undefined) {
         reject('Unable to send')
       }
     }
-
     xhr.open('POST', getUrl.upload(), true)
-    xhr.send(data)
+    xhr.send(JSON.stringify(data))
   })
 }
 

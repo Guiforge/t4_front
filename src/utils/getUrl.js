@@ -8,7 +8,7 @@ function download() {
 }
 
 function upload() {
-  return `${process.env.API_URL}/${subPath.upload}`
+  return `${process.env.API_URL}${subPath.upload}`
 }
 
 export default {
