@@ -20,6 +20,7 @@ async function send(data, onProgress = undefined) {
       }
     }
     xhr.open('POST', getUrl.upload(), true)
+    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
     xhr.send(JSON.stringify(data))
   })
 }
