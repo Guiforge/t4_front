@@ -14,11 +14,12 @@ async function send(data, onProgress = undefined) {
 
     xhr.onload = (ev) => {
       if (ev.target.status === 200) {
-        resolve(this.responseText)
+        resolve(JSON.parse(ev.target.response).id)
       } else {
         reject('Unable to send')
       }
     }
+    // console.log(getUrl.upload())
     xhr.open('POST', getUrl.upload(), true)
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
     xhr.send(JSON.stringify(data))
