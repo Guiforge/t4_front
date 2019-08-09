@@ -11,8 +11,8 @@ export default class processData {
 
   async getEncrypt() {
     const enc = {}
-    enc.meta = new Uint16Array(await this.encrypt.encryptMeta())
-    enc.file = new Uint16Array(await this.encrypt.encryptFile())
+    enc.meta = Array.from(new Uint16Array(await this.encrypt.encryptMeta()))
+    enc.file = Array.from(new Uint16Array(await this.encrypt.encryptFile()))
     return enc
   }
 
@@ -26,7 +26,7 @@ export default class processData {
       zipfile,
     )
     data.enc = await this.getEncrypt()
-    data.key = new Uint16Array(await this.keys.exportKeySign())
+    data.key = Array.from(new Uint16Array(await this.keys.exportKeySign()))
     return data
   }
 }
