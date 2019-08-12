@@ -5,30 +5,24 @@ const encoder = new TextEncoder()
 export default class Keys {
   constructor(secret) {
     if (secret) {
-      this.secretRaw = encoder.encode(secret)
-      this.promiseDeriveKey = crypto.subtle.importKey(
-        'raw',
-        this.secretRaw,
-        { name: 'PBKDF2' },
-        false,
-        ['deriveKey'],
-      )
+      this.secretRaw = secret
     } else {
       this.secretRaw = crypto.getRandomValues(new Uint8Array(96))
-      this.promiseDeriveKey = crypto.subtle.importKey(
-        'raw',
-        this.secretRaw,
-        { name: 'HKDF' }, // best for non password
-        false,
-        ['deriveKey'],
-      )
     }
+    console.log('RAW', this.secretRaw)
+    this.promiseDeriveKey = crypto.subtle.importKey(
+      'raw',
+      this.secretRaw,
+      { name: 'HKDF' }, // best for non password
+      false,
+      ['deriveKey'],
+    )
     this.promiseMetaKey = this.promiseDeriveKey.then((deriveKey) => {
       const promiseDeriveKey = crypto.subtle.deriveKey(
         {
           name: 'HKDF',
           hash: 'SHA-256',
-          salt: crypto.getRandomValues(new Uint8Array(256)),
+          salt: encoder.encode('meta'),
           info: encoder.encode('meta'),
         },
         deriveKey,
@@ -47,8 +41,8 @@ export default class Keys {
         {
           name: 'HKDF',
           hash: 'SHA-256',
-          salt: crypto.getRandomValues(new Uint8Array(256)),
-          info: encoder.encode('meta'),
+          salt: encoder.encode('file'),
+          info: encoder.encode('file'),
         },
         deriveKey,
         {
@@ -66,8 +60,8 @@ export default class Keys {
         {
           name: 'HKDF',
           hash: 'SHA-256',
-          salt: crypto.getRandomValues(new Uint8Array(256)),
-          info: encoder.encode('meta'),
+          salt: encoder.encode('sign'),
+          info: encoder.encode('sign'),
         },
         deriveKey,
         {
@@ -102,6 +96,9 @@ export default class Keys {
   async getKeySign() {
     try {
       const key = await this.promiseSignKey
+      const exp = await crypto.subtle.exportKey('raw', key)
+      // eslint-disable-next-line new-cap
+      console.log('Export - KEY--', new Uint8Array(exp))
       return key
     } catch (error) {
       throw new Error('Cannot create crypto key')
@@ -111,7 +108,7 @@ export default class Keys {
   async exportKeySign() {
     const key = await this.getKeySign()
     const exp = await crypto.subtle.exportKey('raw', key)
-    return exp
+    return new Uint8Array(exp)
   }
 
   async getSecret() {

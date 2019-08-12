@@ -23,11 +23,17 @@
           <br />
         </div>
       </div>
+      <b-button @click="getMeta">Click Me</b-button>
     </b-collapse>
   </section>
 </template>
 
 <script>
+import Download from '../utils/download'
+import Keys from '../zip-encrypt/keys'
+import b64 from '../utils/base64'
+import getUrl from '../utils/getUrl'
+
 export default {
   /* eslint-disable-next-line */
   name: 'Download',
@@ -40,10 +46,71 @@ export default {
   data() {
     return {
       key64: null,
+      downloadClass: undefined,
+      nonce: undefined,
+      signNonce: undefined,
+      keys: undefined,
+      meta: undefined,
     }
   },
   created() {
     this.key64 = this.$router.currentRoute.hash.substr(1)
+    this.nonce = Download.getNonce(this.id)
+    this.getMeta()
+  },
+  methods: {
+    toastOpen(msg, type) {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      this.$toast.open({
+        message: msg,
+        type,
+      })
+    },
+    toastSuccess(msg) {
+      this.toastOpen(msg, 'is-success')
+    },
+    toastDanger(msg) {
+      this.toastOpen(msg, 'is-danger')
+    },
+    async getKeys() {
+      const keyStr = await b64.decode(this.key64)
+      const keyArray = new Uint8Array(keyStr.split(','))
+      const keys = await new Keys(keyArray)
+      return keys
+    },
+    async getMeta() {
+      this.keys = await this.getKeys()
+      const keySign = await this.keys.getKeySign()
+
+      this.signNonce = await crypto.subtle.sign(
+        'HMAC',
+        keySign,
+        // eslint-disable-next-line new-cap
+        new Buffer.from(await this.nonce),
+      )
+
+      const xhr = new XMLHttpRequest()
+
+      xhr.onerror = (err) => {
+        this.toastDanger(`Error: ${err.target.status}`)
+      }
+
+      xhr.onload = (ev) => {
+        if (ev.target.status === 200) {
+          this.toastSuccess(ev.target.response)
+        } else {
+          this.toastDanger(ev.target.status)
+        }
+      }
+      xhr.open('POST', getUrl.getMeta(this.id), true)
+      xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
+      xhr.send(
+        JSON.stringify({
+          // eslint-disable-next-line new-cap
+          signNonce: new Buffer.from(this.signNonce),
+        }),
+      )
+    },
   },
 }
 </script>

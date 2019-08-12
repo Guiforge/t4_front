@@ -19,7 +19,6 @@ async function send(data, onProgress = undefined) {
         reject('Unable to send')
       }
     }
-    // console.log(getUrl.upload())
     xhr.open('POST', getUrl.upload(), true)
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
     xhr.send(JSON.stringify(data))
