@@ -79,37 +79,48 @@ export default {
       return keys
     },
     async getMeta() {
+      const metaEnc = await this.getRemoteData()
+      await this.decryptMeta(metaEnc)
+    },
+    async decryptMeta(metaEnc) {
+      console.log(metaEnc)
+      const truc = await crypto.subtle.decrypt(
+        'AES-GCM',
+        await this.keys.getKeyFile(),
+        new Uint8Array(metaEnc),
+      )
+      console.log(truc)
+    },
+    async getRemoteData() {
       this.keys = await this.getKeys()
       const keySign = await this.keys.getKeySign()
-
       this.signNonce = await crypto.subtle.sign(
         'HMAC',
         keySign,
         // eslint-disable-next-line new-cap
         new Buffer.from(await this.nonce),
       )
-
-      const xhr = new XMLHttpRequest()
-
-      xhr.onerror = (err) => {
-        this.toastDanger(`Error: ${err.target.status}`)
-      }
-
-      xhr.onload = (ev) => {
-        if (ev.target.status === 200) {
-          this.toastSuccess(ev.target.response)
-        } else {
-          this.toastDanger(ev.target.status)
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.onerror = (err) => {
+          reject(`Error: ${err.target.status}`)
         }
-      }
-      xhr.open('POST', getUrl.getMeta(this.id), true)
-      xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
-      xhr.send(
-        JSON.stringify({
-          // eslint-disable-next-line new-cap
-          signNonce: new Buffer.from(this.signNonce),
-        }),
-      )
+        xhr.onload = (ev) => {
+          if (ev.target.status === 200) {
+            resolve(ev.target.response)
+          } else {
+            reject(ev.target.status)
+          }
+        }
+        xhr.open('POST', getUrl.getMeta(this.id), true)
+        xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
+        xhr.send(
+          JSON.stringify({
+            // eslint-disable-next-line new-cap
+            signNonce: new Buffer.from(this.signNonce),
+          }),
+        )
+      })
     },
   },
 }

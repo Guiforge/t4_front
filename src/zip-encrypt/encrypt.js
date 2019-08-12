@@ -10,32 +10,34 @@ class encrypt {
   async encryptFile() {
     const file = this.raw.file
     const keyFile = await this.keys.promiseFileKey
+    const ivFile = crypto.getRandomValues(new Uint8Array(96 / 8))
 
     const result = await crypto.subtle.encrypt(
       {
         name: 'AES-GCM',
-        iv: crypto.getRandomValues(new Uint8Array(96 / 8)),
+        iv: ivFile,
       },
       keyFile,
       file,
     )
-    return result
+    return { data: result, ivFile }
   }
 
   async encryptMeta() {
     const encoder = new TextEncoder()
     const meta = this.raw.meta
     const keyMeta = await this.keys.promiseMetaKey
+    const ivMeta = crypto.getRandomValues(new Uint8Array(96 / 8))
 
     const result = await crypto.subtle.encrypt(
       {
         name: 'AES-GCM',
-        iv: crypto.getRandomValues(new Uint8Array(96 / 8)),
+        iv: ivMeta,
       },
       keyMeta,
       encoder.encode(JSON.stringify(meta)),
     )
-    return result
+    return { data: result, ivMeta }
   }
 }
 export default encrypt
