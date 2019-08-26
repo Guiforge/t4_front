@@ -29,21 +29,17 @@ export default async function zipFiles(files) {
     // Wait ALL
     Promise.all(proms)
       .then(() => {
-        zip
-          .generateAsync({
+        // You can use metadata
+        resolve(
+          zip.generateInternalStream({
             name: 'Zip.zip',
             type: 'arraybuffer',
             compression: 'DEFLATE',
             compressionOptions: {
               level: 9,
             },
-          })
-          .then((zipfile) => {
-            resolve(zipfile)
-          })
-          .catch(() => {
-            reject(Error('Cannot Zip'))
-          })
+          }),
+        )
       })
       .catch((err) => {
         reject(err)

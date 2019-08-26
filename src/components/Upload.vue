@@ -136,8 +136,8 @@
 <script>
 import formatSizeImp from '../utils/formatSize'
 import Process from '../zip-encrypt/process'
-import sender from '../utils/sendUpload'
-import getUrl from '../utils/getUrl'
+// import sender from '../utils/sendUpload'
+// import getUrl from '../utils/getUrl'
 
 export default {
   name: 'Upload',
@@ -202,12 +202,22 @@ export default {
             this.toastDanger,
           )
         }
-        const data = await this.processObject.data
-        const idFile = await sender.send(data)
+        const secretRaw = await this.processObject.keys.getSecret()
 
-        this.url = `${getUrl.download()}${idFile}#${await this.processObject.keys.getSecret()}`
-        this.step = 2
-        this.toastSuccess('Sent !!')
+        console.log('sert rine', secretRaw)
+        this.processObject.generateStream()
+        // .on('data', (data) => {
+        //   console.log('data', data.length)
+        // })
+        // .on('end', (idFile) => {
+        //   this.url = `${getUrl.download()}${idFile}#${secretRaw}`
+        //   this.step = 2
+        //   this.toastSuccess('Sent !!')
+        // })
+        // .on('error', (error) => {
+        //   console.error(error)
+        //   this.toastDanger(`${error}`)
+        // })
       } catch (error) {
         console.log(error)
         if (`${error.name}` === 'TypeError') {
