@@ -33,7 +33,9 @@
 import Download from '../utils/download'
 import Keys from '../zip-encrypt/keys'
 import b64 from '../utils/base64'
-import getUrl from '../utils/getUrl'
+// import getUrl from '../utils/getUrl'
+import abTools from '../utils/abTools'
+import getMeta from '../utils/sendDownload'
 
 export default {
   /* eslint-disable-next-line */
@@ -84,20 +86,17 @@ export default {
       await this.decryptMeta(JSON.parse(metaEnc).meta)
     },
     async decryptMeta(metaEnc) {
-      console.log('meta', new Buffer.from(metaEnc.ivMeta))
-      // eslint-disable-next-line new-cap
-      console.log(new Buffer.from(metaEnc.data))
-      const truc = await crypto.subtle.decrypt(
+      const metaDecrypt = await crypto.subtle.decrypt(
         {
           name: 'AES-GCM',
-          // eslint-disable-next-line new-cap
           iv: new Buffer.from(metaEnc.ivMeta),
         },
-        await this.keys.getKeyFile(),
-        // eslint-disable-next-line new-cap
+        await this.keys.getKeyMeta(),
         new Buffer.from(metaEnc.data),
       )
-      console.log(truc)
+      const meta = JSON.parse(abTools.ab2str(metaDecrypt))
+      console.log('Meta', meta)
+      return meta
     },
     async getRemoteData() {
       this.keys = await this.getKeys()
@@ -105,31 +104,9 @@ export default {
       this.signNonce = await crypto.subtle.sign(
         'HMAC',
         keySign,
-        // eslint-disable-next-line new-cap
         new Buffer.from(await this.nonce),
       )
-
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
-        xhr.onerror = (err) => {
-          reject(`Error: ${err.target.status}`)
-        }
-        xhr.onload = (ev) => {
-          if (ev.target.status === 200) {
-            resolve(ev.target.response)
-          } else {
-            reject(ev.target.status)
-          }
-        }
-        xhr.open('POST', getUrl.getMeta(this.id), true)
-        xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
-        xhr.send(
-          JSON.stringify({
-            // eslint-disable-next-line new-cap
-            signNonce: new Buffer.from(this.signNonce),
-          }),
-        )
-      })
+      return getMeta(this.id, this.signNonce)
     },
   },
 }

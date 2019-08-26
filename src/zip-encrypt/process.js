@@ -1,6 +1,7 @@
 import zipFiles from '../zip-encrypt/zip'
 import KeysConstruct from '../zip-encrypt/keys'
 import EncryptConstruct from '../zip-encrypt/encrypt'
+import abTools from '../utils/abTools'
 
 export default class processData {
   constructor(files) {
@@ -13,10 +14,12 @@ export default class processData {
     const enc = {}
     enc.meta = await this.encrypt.encryptMeta()
     enc.file = await this.encrypt.encryptFile()
-    enc.meta.data = Array.from(new Uint8Array(enc.meta.data))
-    enc.file.data = Array.from(new Uint8Array(enc.file.data))
-    enc.meta.ivMeta = Array.from(new Uint8Array(enc.meta.ivMeta))
-    enc.file.ivFile = Array.from(new Uint8Array(enc.file.ivFile))
+    // Don't Change Type
+    enc.meta.data = abTools.ab2a(enc.meta.data)
+    enc.file.data = abTools.ab2a(enc.file.data)
+
+    enc.meta.ivMeta = abTools.ab2a(enc.meta.ivMeta)
+    enc.file.ivFile = abTools.ab2a(enc.file.ivFile)
     return enc
   }
 
@@ -30,7 +33,7 @@ export default class processData {
       zipfile,
     )
     data.enc = await this.getEncrypt()
-    data.key = Array.from(new Uint8Array(await this.keys.exportKeySign()))
+    data.key = abTools.ab2a(await this.keys.exportKeySign())
     return data
   }
 }
