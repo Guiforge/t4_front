@@ -29,6 +29,7 @@
 </template>
 
 <script>
+/* eslint-disable new-cap */
 import Download from '../utils/download'
 import Keys from '../zip-encrypt/keys'
 import b64 from '../utils/base64'
@@ -80,14 +81,21 @@ export default {
     },
     async getMeta() {
       const metaEnc = await this.getRemoteData()
-      await this.decryptMeta(metaEnc)
+      await this.decryptMeta(JSON.parse(metaEnc).meta)
     },
     async decryptMeta(metaEnc) {
-      console.log(metaEnc)
+      console.log('meta', new Buffer.from(metaEnc.ivMeta))
+      // eslint-disable-next-line new-cap
+      console.log(new Buffer.from(metaEnc.data))
       const truc = await crypto.subtle.decrypt(
-        'AES-GCM',
+        {
+          name: 'AES-GCM',
+          // eslint-disable-next-line new-cap
+          iv: new Buffer.from(metaEnc.ivMeta),
+        },
         await this.keys.getKeyFile(),
-        new Uint8Array(metaEnc),
+        // eslint-disable-next-line new-cap
+        new Buffer.from(metaEnc.data),
       )
       console.log(truc)
     },
@@ -100,6 +108,7 @@ export default {
         // eslint-disable-next-line new-cap
         new Buffer.from(await this.nonce),
       )
+
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest()
         xhr.onerror = (err) => {
