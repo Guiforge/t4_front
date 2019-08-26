@@ -1,24 +1,28 @@
-var http = require('http');
-var fs = require('fs');
+const http = require('http');
 
-// Chargement du fichier index.html affiché au client
-var server = http.createServer(function(req, res) {
-    fs.readFile('./index.html', 'utf-8', function(error, content) {
-        res.writeHead(200, {"Content-Type": "text/html"});
-        res.end(content);
-    });
-});
+const server = http.createServer((req, res) => {
+  // `req` is an http.IncomingMessage, which is a Readable Stream.
+  // `res` is an http.ServerResponse, which is a Writable Stream.
 
-// Chargement de socket.io
-var io = require('socket.io').listen(server);
+  // Get the data as utf8 strings.
+  // If an encoding is not set, Buffer objects will be received.
+  req.setEncoding('utf8');
 
-// Quand un client se connecte, on le note dans la console
-io.sockets.on('connection', function (socket) {
-	console.log('Un client est connecté !');
-	socket.on('data', (data) => {
-		console.log("datat:", data)
-		console.log(JSON.stringify(data))
-	})
+  // Readable streams emit 'data' events once a listener is added.
+  req.on('data', (chunk) => {
+    console.log('chunk:', chunk.length);
+  });
+
+  // The 'end' event indicates that the entire body has been received.
+  req.on('end', () => {
+    try {
+      res.end();
+    } catch (er) {
+      // uh oh! bad json!
+      res.statusCode = 400;
+      return res.end(`error: ${er.message}`);
+    }
+  });
 });
 
 server.listen(8090);
