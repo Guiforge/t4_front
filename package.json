@@ -20,6 +20,7 @@
     "buefy": "^0.7.8",
     "jszip": "^3.2.1",
     "module": "^1.2.5",
+    "readable-stream": "^3.4.0",
     "vue": "^2.6.10",
     "vue-router": "^3.0.1"
   },

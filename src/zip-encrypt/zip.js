@@ -31,9 +31,8 @@ export default async function zipFiles(files) {
       .then(() => {
         // You can use metadata
         resolve(
-          zip.generateInternalStream({
+          zip.generateNodeStream({
             name: 'Zip.zip',
-            type: 'arraybuffer',
             compression: 'DEFLATE',
             compressionOptions: {
               level: 9,
