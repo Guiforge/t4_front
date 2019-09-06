@@ -1,28 +1,69 @@
 /* eslint-disable no-underscore-dangle */
-import crypto from 'crypto'
+import cryptoBro from 'crypto'
+
+async function myPbkdf2(secret, salt, keylen) {
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    secret,
+    { name: 'PBKDF2' },
+    false,
+    ['deriveBits', 'deriveKey'],
+  )
+  try {
+    console.log('ret1', { secret, salt, keylen })
+
+    const ret = await crypto.subtle.deriveBits(
+      {
+        name: 'PBKDF2',
+        salt: Buffer.from(salt),
+        iterations: 100000,
+        hash: 'SHA-256',
+      },
+      keyMaterial,
+      keylen,
+    )
+    console.log('ret', { secret, salt, keylen, ret })
+    return Buffer.from(ret)
+  } catch (error) {
+    console.log(error)
+    throw error
+  }
+}
 
 async function _KeyCreate(secret, info, keylen) {
   console.log('create-key', { secret, info, keylen })
-  return new Promise((resolve, reject) => {
-    const salt = crypto
-      .createHash('sha512')
-      .update(info)
-      .digest('hex')
-    crypto.pbkdf2(secret, salt, 100000, keylen, 'sha512', (err, derivedKey) => {
-      if (err) {
-        reject(err)
-      }
-      resolve(derivedKey)
-    })
-  })
+  const salt = cryptoBro
+    .createHash('sha512')
+    .update(info)
+    .digest('hex')
+  return myPbkdf2(secret, salt, keylen)
 }
 
 export default class KeysConstructor {
   constructor(pass) {
-    this._secretRaw = pass || crypto.randomBytes(96)
-    this._KeyDeriveProm = _KeyCreate(this._secretRaw, 'KeyDerive', 512)
-    this._IvMeta = crypto.randomBytes(128)
-    this._IvFile = crypto.randomBytes(128)
+    this._secretRaw = pass || cryptoBro.randomBytes(96)
+    // this._KeyDerive = _KeyCreate(this._secretRaw, 'KeyDerive', 512)
+    // this._KeyFile = _KeyCreate(this._KeyDerive, 'KeyFile', 32)
+    // this._KeyMeta = _KeyCreate(this._KeyDerive, 'KeyMeta', 32)
+    // this._KeyAuth = cryptoBro
+    //   .createHmac('sha512', 'password')
+    //   .update(this._KeyDerive)
+    //   .digest()
+    this._KeyDeriveProm = _KeyCreate(
+      Buffer.from(this._secretRaw),
+      'KeyDerive',
+      512,
+    ).then((deriveKey) => {
+      this._KeyFileProm = _KeyCreate(deriveKey, 'KeyFile', 32 * 8)
+      this._KeyMetaProm = _KeyCreate(deriveKey, 'KeyMeta', 32 * 8)
+      this._KeyAuth = cryptoBro
+        .createHmac('sha512', 'password')
+        .update(deriveKey)
+        .digest()
+    })
+
+    this._IvMeta = cryptoBro.randomBytes(128)
+    this._IvFile = cryptoBro.randomBytes(128)
   }
   getIvMeta() {
     return this._IvMeta
@@ -31,31 +72,16 @@ export default class KeysConstructor {
     return this._IvFile
   }
   async getKeyAuth() {
-    const derivedKey = await this._KeyDeriveProm
-    if (this._keyAuth) {
-      return this._keyAuth
-    }
-    this._KeyAuth = crypto
-      .createHmac('sha512', 'password')
-      .update(derivedKey)
-      .digest()
+    await this._KeyDeriveProm
     return this._keyAuth
   }
   async getKeyFile() {
-    const derivedKey = await this._KeyDeriveProm
-    if (this._keyFileProm) {
-      return this._keyFileProm
-    }
-    this._keyFileProm = _KeyCreate(derivedKey, 'KeyFile', 32)
-    return this._keyFileProm
+    await this._KeyDeriveProm
+    return this._KeyFileProm
   }
   async getKeyMeta() {
-    const derivedKey = await this._KeyDeriveProm
-    if (this._keyMetaProm) {
-      return this._keyMetaProm
-    }
-    this._keyMetaProm = _KeyCreate(derivedKey, 'KeyMeta', 32)
-    return this._keyMetaProm
+    await this._KeyDeriveProm
+    return this._KeyMetaProm
   }
   getSecret() {
     return this._secretRaw

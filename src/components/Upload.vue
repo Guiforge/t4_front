@@ -151,7 +151,7 @@ export default {
         download: 1,
         day: 1,
       },
-      processObject: null,
+      processObject: new Process(),
       dropFiles: [],
     }
   },
@@ -192,33 +192,9 @@ export default {
     async process() {
       this.isLoading = true
       try {
-        if (
-          !this.processObject ||
-          this.processObject.files !== this.dropFiles
-        ) {
-          this.processObject = new Process(
-            this.dropFiles,
-            this.toastSuccess,
-            this.toastDanger,
-          )
-        }
         const secretRaw = await this.processObject.keys.getSecret()
-
         console.log('sert rine', secretRaw)
-        this.processObject.launch()
-        // this.processObject.generateStream()
-        // .on('data', (data) => {
-        //   console.log('data', data.length)
-        // })
-        // .on('end', (idFile) => {
-        //   this.url = `${getUrl.download()}${idFile}#${secretRaw}`
-        //   this.step = 2
-        //   this.toastSuccess('Sent !!')
-        // })
-        // .on('error', (error) => {
-        //   console.error(error)
-        //   this.toastDanger(`${error}`)
-        // })
+        this.processObject.launch(this.dropFiles)
       } catch (error) {
         console.log(error)
         if (`${error.name}` === 'TypeError') {

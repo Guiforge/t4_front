@@ -19,16 +19,14 @@ export default class Sender {
       this.onProgress('Meta: impossible to handle %', 0)
     }
   }
+
   async _senderMeta(meta) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest()
-
       xhr.onprogress = this._updateProgress
-
       xhr.onerror = (err) => {
         reject(`Error: ${err.target.status}`)
       }
-
       xhr.onload = (ev) => {
         if (ev.target.status === 200) {
           this._id = JSON.parse(ev.target.response).id
@@ -37,25 +35,26 @@ export default class Sender {
           reject('Unable to send Meta')
         }
       }
+
       xhr.open('POST', getUrl.uploadMeta(), true)
       xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
       xhr.send(JSON.stringify(meta))
     })
   }
+
   async send(type, data) {
     switch (type) {
       case 'meta':
         return this._senderMeta(data)
       case 'file':
-        return console.log('file Send')
-      // return this._senderMeta(data)
+        return this._sendStreamFile()
       default:
         throw Error('Wrong type to send')
     }
   }
 
   // eslint-disable-next-line class-methods-use-this
-  sendStreamFile() {
+  _sendStreamFile() {
     function Sink(options) {
       Writable.call(this, options)
     }
@@ -67,5 +66,9 @@ export default class Sender {
       callback()
     }
     return new Sink()
+  }
+
+  sendAuthFile(authTag) {
+    console.log(authTag, this)
   }
 }
