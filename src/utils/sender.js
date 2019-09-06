@@ -11,6 +11,7 @@ export default class Sender {
     this.onProgress = onProgress || _onNothing
     this.onError = onError || _onNothing
   }
+
   _updateProgress(oEvent) {
     if (oEvent.lengthComputable) {
       const percentComplete = (oEvent.loaded / oEvent.total) * 100
@@ -23,19 +24,22 @@ export default class Sender {
   async _senderMeta(meta) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest()
-      xhr.onprogress = this._updateProgress
+      xhr.onprogress = this._updateProgress.bind(this)
       xhr.onerror = (err) => {
         reject(`Error: ${err.target.status}`)
       }
       xhr.onload = (ev) => {
+        console.log('ev', ev)
         if (ev.target.status === 200) {
-          this._id = JSON.parse(ev.target.response).id
+          const res = JSON.parse(ev.target.response)
+          this._id = res.id
+          this._owner = res.owner
+          console.log(this)
           resolve(this._id)
         } else {
           reject('Unable to send Meta')
         }
       }
-
       xhr.open('POST', getUrl.uploadMeta(), true)
       xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
       xhr.send(JSON.stringify(meta))

@@ -10,8 +10,6 @@ async function myPbkdf2(secret, salt, keylen) {
     ['deriveBits', 'deriveKey'],
   )
   try {
-    console.log('ret1', { secret, salt, keylen })
-
     const ret = await crypto.subtle.deriveBits(
       {
         name: 'PBKDF2',
@@ -22,16 +20,13 @@ async function myPbkdf2(secret, salt, keylen) {
       keyMaterial,
       keylen,
     )
-    console.log('ret', { secret, salt, keylen, ret })
     return Buffer.from(ret)
   } catch (error) {
-    console.log(error)
     throw error
   }
 }
 
 async function _KeyCreate(secret, info, keylen) {
-  console.log('create-key', { secret, info, keylen })
   const salt = cryptoBro
     .createHash('sha512')
     .update(info)

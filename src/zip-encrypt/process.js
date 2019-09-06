@@ -23,7 +23,7 @@ export default class processData {
   async processMeta() {
     /*
     meta: {
-      enc: { filesName: this.files, ivFiles: ivFiles } //encrypt data
+      enc: {enc: } { filesName: this.files, ivFiles: ivFiles } //encrypt data
       ivMeta:
       keyAuth
       options
@@ -38,7 +38,6 @@ export default class processData {
     const keyMeta = await this.keys.getKeyMeta()
     const ivMeta = this.keys.getIvMeta()
     meta.enc = encrypt.encryptMeta(keyMeta, ivMeta, meta.enc)
-    console.log(encrypt.decryptMeta(keyMeta, ivMeta, meta.enc))
     this._sender.send('meta', meta)
   }
 
