@@ -1,0 +1,108 @@
+/* eslint-disable no-underscore-dangle */
+import { Transform } from 'readable-stream'
+import abTools from '../utils/abTools'
+
+// import concatUint8 from '../utils/concatUint8'
+
+// const SIZE_CHUNK = 128 * 100
+
+class encrypt {
+  constructor(keys, meta) {
+    // this._start_enc_file = false
+    this.keys = keys
+    this.meta = meta
+    this.ivFile = crypto.getRandomValues(new Uint8Array(96 / 8))
+    this.ivMeta = crypto.getRandomValues(new Uint8Array(96 / 8))
+    this._counter = 0
+  }
+
+  generateIV() {
+    if (this._counter > 0xffffffff) {
+      throw Error('Two many sequence Block')
+    }
+    const iv = Buffer.concat([
+      Buffer.from(this.ivFile),
+      Buffer.from(abTools.i2b(this._counter)),
+    ])
+    this._counter += 1
+    return iv
+  }
+
+  async encryptChunk(chunk) {
+    const ret = await crypto.subtle.encrypt(
+      {
+        name: 'AES-GCM',
+        iv: this.generateIV(),
+      },
+      await this.keys.promiseFileKey,
+      chunk,
+    )
+    console.log('hash', Array.from(this.generateIV()))
+    return ret
+  }
+
+  async createEncryptStream() {
+    // CreateEncryptStream
+    const transformer = new Transform({
+      async transform(chunk, encoding, done) {
+        this._buffers.push(chunk)
+        this._inputSize += chunk.length
+
+        if (this._inputSize >= this._targetSize) {
+          await this.dump(done)
+        } else {
+          done()
+        }
+      },
+      flush() {
+        // empty buffer _inputSize
+        while (this._inputSize) {
+          this.dump()
+        }
+      },
+    })
+
+    transformer.dump = async (done) => {
+      const buffer = Buffer.concat(transformer._buffers)
+      const packetBuffer = buffer.slice(0, transformer._targetSize)
+
+      // eslint-disable-next-line security/detect-new-buffer
+      transformer._buffers = [buffer.slice(transformer._targetSize)]
+      transformer._inputSize = transformer._buffers[0].length
+
+      const encryptChunk = await this.encryptChunk(packetBuffer)
+
+      if (!transformer.push(Buffer.from(encryptChunk))) {
+        transformer.on('drain', () => {
+          if (done) {
+            done()
+          }
+        })
+      } else if (done) {
+        done()
+      }
+    }
+
+    transformer._buffers = []
+    transformer._inputSize = 0
+    transformer._targetSize = 128 * 1024
+
+    return transformer
+  }
+
+  async encryptMeta() {
+    const encoder = new TextEncoder()
+    const keyMeta = await this.keys.promiseMetaKey
+
+    const result = await crypto.subtle.encrypt(
+      {
+        name: 'AES-GCM',
+        iv: this.ivMeta,
+      },
+      keyMeta,
+      encoder.encode(JSON.stringify(this.meta)),
+    )
+    return { data: result, ivMeta: this.ivMeta, ivFile: this.ivFile }
+  }
+}
+export default encrypt

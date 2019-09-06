@@ -205,7 +205,8 @@ export default {
         const secretRaw = await this.processObject.keys.getSecret()
 
         console.log('sert rine', secretRaw)
-        this.processObject.generateStream()
+        this.processObject.launch()
+        // this.processObject.generateStream()
         // .on('data', (data) => {
         //   console.log('data', data.length)
         // })
