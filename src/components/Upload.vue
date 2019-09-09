@@ -155,6 +155,11 @@ export default {
       dropFiles: [],
     }
   },
+  mounted() {
+    if (localStorage.owners) {
+      this.owners = JSON.parse(localStorage.getItem('owners'))
+    }
+  },
   methods: {
     changeStep(isAdd) {
       if (isAdd) {
@@ -194,7 +199,7 @@ export default {
       try {
         const secretRaw = await this.processObject.keys.getSecret()
         console.log('sert rine', secretRaw)
-        this.processObject.launch(this.dropFiles)
+        await this.processObject.launch(this.dropFiles)
       } catch (error) {
         console.log(error)
         if (`${error.name}` === 'TypeError') {

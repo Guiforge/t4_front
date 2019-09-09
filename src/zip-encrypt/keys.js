@@ -37,45 +37,38 @@ async function _KeyCreate(secret, info, keylen) {
 export default class KeysConstructor {
   constructor(pass) {
     this._secretRaw = pass || cryptoBro.randomBytes(96)
-    // this._KeyDerive = _KeyCreate(this._secretRaw, 'KeyDerive', 512)
-    // this._KeyFile = _KeyCreate(this._KeyDerive, 'KeyFile', 32)
-    // this._KeyMeta = _KeyCreate(this._KeyDerive, 'KeyMeta', 32)
-    // this._KeyAuth = cryptoBro
-    //   .createHmac('sha512', 'password')
-    //   .update(this._KeyDerive)
-    //   .digest()
     this._KeyDeriveProm = _KeyCreate(
       Buffer.from(this._secretRaw),
       'KeyDerive',
       512,
-    ).then((deriveKey) => {
-      this._KeyFileProm = _KeyCreate(deriveKey, 'KeyFile', 32 * 8)
-      this._KeyMetaProm = _KeyCreate(deriveKey, 'KeyMeta', 32 * 8)
-      this._KeyAuth = cryptoBro
-        .createHmac('sha512', 'password')
-        .update(deriveKey)
-        .digest()
-    })
+    ).then(this._initKey.bind(this))
 
     this._IvMeta = cryptoBro.randomBytes(128)
     this._IvFile = cryptoBro.randomBytes(128)
   }
+
+  _initKey(deriveKey) {
+    this._KeyFileProm = _KeyCreate(deriveKey, 'KeyFile', 32 * 8)
+    this._KeyMetaProm = _KeyCreate(deriveKey, 'KeyMeta', 32 * 8)
+    this._KeyAuth = cryptoBro
+      .createHmac('sha512', 'password')
+      .update(deriveKey)
+      .digest()
+  }
+
   getIvMeta() {
     return this._IvMeta
   }
   getIvFile() {
     return this._IvFile
   }
-  async getKeyAuth() {
-    await this._KeyDeriveProm
-    return this._keyAuth
+  getKeyAuth() {
+    return this._KeyAuth
   }
   async getKeyFile() {
-    await this._KeyDeriveProm
     return this._KeyFileProm
   }
   async getKeyMeta() {
-    await this._KeyDeriveProm
     return this._KeyMetaProm
   }
   getSecret() {

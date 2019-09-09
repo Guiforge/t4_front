@@ -95,7 +95,6 @@ export default {
         new Buffer.from(metaEnc.data),
       )
       const meta = JSON.parse(abTools.ab2str(metaDecrypt))
-      console.log('Meta', meta)
       return meta
     },
     async getRemoteData() {

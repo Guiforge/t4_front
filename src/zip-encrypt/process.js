@@ -32,13 +32,13 @@ export default class processData {
     const meta = {
       enc: { filesName: this.files, ivFiles: this.keys.getIvFile() },
       ivMeta: this.keys.getIvMeta(),
-      keyAuth: await this.keys.getKeyAuth(),
+      keyAuth: this.keys.getKeyAuth(),
       options: this.options,
     }
     const keyMeta = await this.keys.getKeyMeta()
     const ivMeta = this.keys.getIvMeta()
     meta.enc = encrypt.encryptMeta(keyMeta, ivMeta, meta.enc)
-    this._sender.send('meta', meta)
+    await this._sender.send('meta', meta)
   }
 
   async processFile() {
@@ -49,8 +49,20 @@ export default class processData {
     )
     const sender = await this._sender.send('file')
     streamZip.pipe(cipher).pipe(sender)
-    cipher.final()
-    this._sender.sendAuthFile(cipher.getAuthTag())
+
+    return new Promise((resolve, reject) => {
+      sender.once('finish', () => {
+        cipher.final()
+        this._sender
+          .send('auth', cipher.getAuthTag())
+          .then(() => {
+            resolve()
+          })
+          .catch(() => {
+            reject()
+          })
+      })
+    })
   }
 
   async launch(files) {

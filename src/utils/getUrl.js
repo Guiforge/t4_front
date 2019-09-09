@@ -1,9 +1,10 @@
 const subPath = {
   download: '/D/',
   upload: '/upload',
-  uploadMeta: '/upload',
+  uploadMeta: '/upload/meta',
   getNonce: '/nonce',
   getMeta: '/meta',
+  uploadAuthTag: '/upload/authTag',
 }
 
 function download() {
@@ -18,6 +19,10 @@ function uploadMeta() {
   return `${process.env.API_URL}${subPath.uploadMeta}`
 }
 
+function uploadAuthTag(id) {
+  return `${process.env.API_URL}${subPath.uploadAuthTag}/${id}`
+}
+
 function getNonce(id) {
   return `${process.env.API_URL}${subPath.getNonce}/${id}`
 }
@@ -25,7 +30,6 @@ function getNonce(id) {
 function getMeta(id) {
   return `${process.env.API_URL}${subPath.getMeta}/${id}`
 }
-
 export default {
   download,
   subPath,
@@ -33,4 +37,5 @@ export default {
   getNonce,
   getMeta,
   uploadMeta,
+  uploadAuthTag,
 }
