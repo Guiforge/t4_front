@@ -15,7 +15,7 @@ export default async function getMeta(id, signNonce) {
     }
     xhr.onload = (ev) => {
       if (ev.target.status === 200) {
-        resolve(ev.target.response)
+        resolve(JSON.parse(ev.target.response).meta)
       } else {
         reject(ev.target.status)
       }

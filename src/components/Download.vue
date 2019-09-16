@@ -36,6 +36,7 @@ import Keys from '../zip-encrypt/keys'
 // import getUrl from '../utils/getUrl'
 import abTools from '../utils/abTools'
 import getMeta from '../utils/sendDownload'
+import encrypt from '../zip-encrypt/encrypt'
 
 export default {
   /* eslint-disable-next-line */
@@ -80,12 +81,13 @@ export default {
       return keys
     },
     async getMeta() {
-      const metaEnc = await this.getRemoteData()
-      console.log('metaEnc', metaEnc)
-      await this.decryptMeta(JSON.parse(metaEnc).meta)
+      const meta = await this.getRemoteData()
+      console.log('meta: --', meta)
+      await this.decryptMeta(meta)
     },
-    async decryptMeta(metaEnc) {
-      console.log(metaEnc)
+    async decryptMeta(meta) {
+      encrypt.decryptMeta(await this.keys.getKeyMeta(), meta.ivMeta, meta.enc)
+      console.log(meta)
     },
     async getRemoteData() {
       this.keys = await this.getKeys()
