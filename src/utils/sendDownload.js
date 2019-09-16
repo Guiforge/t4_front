@@ -22,12 +22,7 @@ export default async function getMeta(id, signNonce) {
     }
     xhr.open('GET', getUrl.getMeta(id), true)
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
-    console.log(signNonceB64)
     xhr.setRequestHeader('signNonce', signNonceB64)
-    xhr.send(
-      JSON.stringify({
-        signNonce: new Buffer.from(signNonce),
-      }),
-    )
+    xhr.send()
   })
 }

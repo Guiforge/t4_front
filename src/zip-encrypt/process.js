@@ -14,10 +14,22 @@ import Sender from '../utils/sender'
 // * @param {Function} updateCb the update callback.
 // */
 export default class processData {
-  constructor() {
+  constructor(options) {
     this.keys = new KeysConstruct()
     this._sender = new Sender()
+    this.opt = {
+      days: 1,
+      down: 1,
+    }
+    if (options) {
+      this.opt.days = options.days
+      this.opt.down = options.down
+    }
     // this.data = this.dataCreator()
+  }
+
+  getIdFile() {
+    return this._sender._id
   }
 
   async processMeta() {
@@ -32,8 +44,9 @@ export default class processData {
     const meta = {
       enc: { filesName: this.files, ivFiles: this.keys.getIvFile() },
       ivMeta: this.keys.getIvMeta(),
-      keyAuth: this.keys.getKeyAuth(),
-      options: this.options,
+      keyAuth: await this.keys.getKeyAuth(),
+      days: this.opt.days,
+      down: this.opt.down,
     }
     const keyMeta = await this.keys.getKeyMeta()
     const ivMeta = this.keys.getIvMeta()

@@ -137,7 +137,7 @@
 import formatSizeImp from '../utils/formatSize'
 import Process from '../zip-encrypt/process'
 // import sender from '../utils/sendUpload'
-// import getUrl from '../utils/getUrl'
+import getUrl from '../utils/getUrl'
 
 export default {
   name: 'Upload',
@@ -197,9 +197,13 @@ export default {
     async process() {
       this.isLoading = true
       try {
-        const secretRaw = await this.processObject.keys.getSecret()
-        console.log('sert rine', secretRaw)
+        const secretRaw = await this.processObject.keys
+          .getSecret()
+          .toString('base64')
         await this.processObject.launch(this.dropFiles)
+        this.url = `${getUrl.download()}${this.processObject.getIdFile()}#${secretRaw}`
+        this.step = 2
+        this.toastSuccess('Sent !!')
       } catch (error) {
         console.log(error)
         if (`${error.name}` === 'TypeError') {

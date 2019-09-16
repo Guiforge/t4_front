@@ -1,4 +1,4 @@
-<template>
+`<template>
   <section>
     <b-collapse class="card" aria-id="contentIdForA11y3">
       <div
@@ -32,7 +32,7 @@
 /* eslint-disable new-cap */
 import Download from '../utils/download'
 import Keys from '../zip-encrypt/keys'
-import b64 from '../utils/base64'
+// import b64 from '../utils/base64'
 // import getUrl from '../utils/getUrl'
 import abTools from '../utils/abTools'
 import getMeta from '../utils/sendDownload'
@@ -76,30 +76,33 @@ export default {
       this.toastOpen(msg, 'is-danger')
     },
     async getKeys() {
-      const keyStr = await b64.decode(this.key64)
-      const keyArray = new Uint8Array(keyStr.split(','))
-      const keys = await new Keys(keyArray)
+      const keys = new Keys(new Uint8Array(abTools.b642b(this.key64)))
       return keys
     },
     async getMeta() {
       const metaEnc = await this.getRemoteData()
+      console.log('metaEnc', metaEnc)
       await this.decryptMeta(JSON.parse(metaEnc).meta)
     },
     async decryptMeta(metaEnc) {
-      const metaDecrypt = await crypto.subtle.decrypt(
-        {
-          name: 'AES-GCM',
-          iv: new Buffer.from(metaEnc.ivMeta),
-        },
-        await this.keys.getKeyMeta(),
-        new Buffer.from(metaEnc.data),
-      )
-      const meta = JSON.parse(abTools.ab2str(metaDecrypt))
-      return meta
+      console.log(metaEnc)
     },
     async getRemoteData() {
       this.keys = await this.getKeys()
-      const keySign = await this.keys.getKeySign()
+      // eslint-disable-next-line no-underscore-dangle
+      let keySign = await this.keys.getKeyAuth()
+      // import Key for sign
+      keySign = await crypto.subtle.importKey(
+        'raw',
+        keySign,
+        {
+          name: 'HMAC',
+          hash: { name: 'SHA-256' },
+        },
+        false,
+        ['sign', 'verify'],
+      )
+      // Sign Nonce
       this.signNonce = await crypto.subtle.sign(
         'HMAC',
         keySign,
@@ -111,3 +114,4 @@ export default {
 }
 </script>
 <style scoped></style>
+`

@@ -62,13 +62,22 @@ export default class KeysConstructor {
   getIvFile() {
     return this._IvFile
   }
-  getKeyAuth() {
+  async getKeyAuth() {
+    if (!this._KeyAuth) {
+      await this._KeyDeriveProm
+    }
     return this._KeyAuth
   }
   async getKeyFile() {
+    if (!this._KeyFileProm) {
+      await this._KeyDeriveProm
+    }
     return this._KeyFileProm
   }
   async getKeyMeta() {
+    if (!this._KeyMetaProm) {
+      await this._KeyDeriveProm
+    }
     return this._KeyMetaProm
   }
   getSecret() {
