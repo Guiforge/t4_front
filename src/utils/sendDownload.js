@@ -15,7 +15,10 @@ export default async function getMeta(id, signNonce) {
     }
     xhr.onload = (ev) => {
       if (ev.target.status === 200) {
-        resolve(JSON.parse(ev.target.response).meta)
+        const meta = JSON.parse(ev.target.response).meta
+        meta.enc.auth = Buffer.from(meta.enc.auth, 'base64')
+        meta.ivMeta = Buffer.from(meta.ivMeta, 'base64')
+        resolve(meta)
       } else {
         reject(ev.target.status)
       }

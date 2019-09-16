@@ -17,13 +17,16 @@
       </div>
       <div class="card-content">
         <div class="content">
-          id: {{ id }}
-          <br />
-          key: {{ key64 }}
-          <br />
+          <div v-if="meta">
+            <div>
+              file: file.zip
+              <br />
+              size: {{ meta.sizeZip }}
+            </div>
+            <b-button @click="download">Download</b-button>
+          </div>
         </div>
       </div>
-      <b-button @click="getMeta">Click Me</b-button>
     </b-collapse>
   </section>
 </template>
@@ -32,11 +35,11 @@
 /* eslint-disable new-cap */
 import Download from '../utils/download'
 import Keys from '../zip-encrypt/keys'
-// import b64 from '../utils/base64'
-// import getUrl from '../utils/getUrl'
 import abTools from '../utils/abTools'
 import getMeta from '../utils/sendDownload'
 import encrypt from '../zip-encrypt/encrypt'
+import base64 from '../utils/base64'
+import getUrl from '../utils/getUrl'
 
 export default {
   /* eslint-disable-next-line */
@@ -76,18 +79,46 @@ export default {
     toastDanger(msg) {
       this.toastOpen(msg, 'is-danger')
     },
+    async download() {
+      const signNonceB64 = await base64.encode(
+        JSON.stringify(new Buffer.from(this.signNonce)),
+      )
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+        xhr.onerror = (err) => {
+          reject(`Error: ${err.target.status}`)
+        }
+        xhr.onload = (ev) => {
+          if (ev.target.status === 200) {
+            console.log(ev.target)
+            resolve(ev.target)
+          } else {
+            reject(ev.target.status)
+          }
+        }
+        xhr.open('GET', getUrl.download(this.id), true)
+        xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
+        xhr.setRequestHeader('signNonce', signNonceB64)
+        xhr.send()
+      })
+    },
     async getKeys() {
       const keys = new Keys(new Uint8Array(abTools.b642b(this.key64)))
       return keys
     },
     async getMeta() {
-      const meta = await this.getRemoteData()
-      console.log('meta: --', meta)
-      await this.decryptMeta(meta)
+      const metaEnc = await this.getRemoteData()
+      await this.decryptMeta(metaEnc)
+      this.meta = { sizeZip: metaEnc.sizeZip }
+      this.meta.files = await this.decryptMeta(metaEnc)
+      console.log('this.meta', this.meta)
     },
     async decryptMeta(meta) {
-      encrypt.decryptMeta(await this.keys.getKeyMeta(), meta.ivMeta, meta.enc)
-      console.log(meta)
+      return encrypt.decryptMeta(
+        await this.keys.getKeyMeta(),
+        meta.ivMeta,
+        meta.enc,
+      )
     },
     async getRemoteData() {
       this.keys = await this.getKeys()
