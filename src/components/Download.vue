@@ -36,10 +36,10 @@
 import Download from '../utils/download'
 import Keys from '../zip-encrypt/keys'
 import abTools from '../utils/abTools'
-import getMeta from '../utils/sendDownload'
+import sendDownload from '../utils/sendDownload'
 import encrypt from '../zip-encrypt/encrypt'
-import base64 from '../utils/base64'
-import getUrl from '../utils/getUrl'
+// import base64 from '../utils/base64'
+// import getUrl from '../utils/getUrl'
 
 export default {
   /* eslint-disable-next-line */
@@ -80,27 +80,28 @@ export default {
       this.toastOpen(msg, 'is-danger')
     },
     async download() {
-      const signNonceB64 = await base64.encode(
-        JSON.stringify(new Buffer.from(this.signNonce)),
-      )
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
-        xhr.onerror = (err) => {
-          reject(`Error: ${err.target.status}`)
-        }
-        xhr.onload = (ev) => {
-          if (ev.target.status === 200) {
-            console.log(ev.target)
-            resolve(ev.target)
-          } else {
-            reject(ev.target.status)
-          }
-        }
-        xhr.open('GET', getUrl.download(this.id), true)
-        xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
-        xhr.setRequestHeader('signNonce', signNonceB64)
-        xhr.send()
-      })
+      sendDownload.getFile(this.id, this.signNonce)
+      // const signNonceB64 = await base64.encode(
+      //   JSON.stringify(new Buffer.from(this.signNonce)),
+      // )
+      // return new Promise((resolve, reject) => {
+      //   const xhr = new XMLHttpRequest()
+      //   xhr.onerror = (err) => {
+      //     reject(`Error: ${err.target.status}`)
+      //   }
+      //   xhr.onload = (ev) => {
+      //     if (ev.target.status === 200) {
+      //       console.log(ev.target)
+      //       resolve(ev.target)
+      //     } else {
+      //       reject(ev.target.status)
+      //     }
+      //   }
+      //   xhr.open('GET', getUrl.download(this.id), true)
+      //   xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
+      //   xhr.setRequestHeader('signNonce', signNonceB64)
+      //   xhr.send()
+      // })
     },
     async getKeys() {
       const keys = new Keys(new Uint8Array(abTools.b642b(this.key64)))
@@ -141,7 +142,7 @@ export default {
         keySign,
         new Buffer.from(await this.nonce),
       )
-      return getMeta(this.id, this.signNonce)
+      return sendDownload.getMeta(this.id, this.signNonce)
     },
   },
 }

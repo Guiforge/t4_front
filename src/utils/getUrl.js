@@ -5,10 +5,23 @@ const subPath = {
   getNonce: '/nonce',
   getMeta: '/meta',
   uploadAuthTag: '/upload/authTag',
+  getFile: '/download',
 }
 
 function download() {
   return `${window.location.origin}#${subPath.download}`
+}
+
+function root() {
+  return `process.env.API_URL`
+}
+
+function getFile(id) {
+  return `${process.env.API_URL}${subPath.getFile}/${id}`
+}
+
+function getFileSub(id) {
+  return `${subPath.getFile}/${id}`
 }
 
 function upload() {
@@ -38,4 +51,7 @@ export default {
   getMeta,
   uploadMeta,
   uploadAuthTag,
+  getFile,
+  getFileSub,
+  root,
 }
