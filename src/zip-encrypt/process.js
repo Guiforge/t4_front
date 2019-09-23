@@ -54,8 +54,11 @@ export default class processData {
     await this._sender.send('meta', meta)
   }
 
-  async processFile() {
-    const streamZip = await zipFiles(this.files)
+  async processFile(progress) {
+    function updateCallback(metadata) {
+      progress(`${metadata.currentFile}`, metadata.percent.toFixed(2))
+    }
+    const streamZip = await zipFiles(this.files, updateCallback)
     const cipher = encrypt.createCipherFile(
       await this.keys.getKeyFile(),
       this.keys.getIvFile(),
@@ -77,9 +80,9 @@ export default class processData {
     })
   }
 
-  async launch(files) {
+  async launch(files, progress) {
     this.files = files
     await this.processMeta()
-    await this.processFile()
+    await this.processFile(progress)
   }
 }

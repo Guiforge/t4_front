@@ -10,7 +10,11 @@
     </section>
 
     <!-- Step 2 share  -->
-    <b-collapse v-if="url !== null" class="card" aria-id="contentIdForA11y3">
+    <b-collapse
+      v-if="url !== null && !isLoading"
+      class="card"
+      aria-id="contentIdForA11y3"
+    >
       <div
         slot="trigger"
         slot-scope="props"
@@ -55,7 +59,7 @@
     </b-collapse>
 
     <!-- Step One -->
-    <article v-else class="media">
+    <article v-else-if="!isLoading" class="media">
       <div class="media-content" style="width: -webkit-fill-available;">
         <div class="content" style="text-align: center">
           <h1>Uploads your files!</h1>
@@ -125,11 +129,22 @@
       </div>
     </article>
 
-    <b-loading
+    <!-- Step Progress -->
+    <div v-if="isLoading">
+      <h2>{{ progress.status }}</h2>
+      <h3>({{ progress.value }}%)</h3>
+      <progress
+        :value="progress.value"
+        class="progress is-info"
+        max="100"
+      ></progress>
+    </div>
+
+    <!-- <b-loading
       :is-full-page="true"
       :active.sync="isLoading"
       :can-cancel="true"
-    ></b-loading>
+    ></b-loading> -->
   </div>
 </template>
 
@@ -152,6 +167,10 @@ export default {
         day: 1,
       },
       processObject: new Process(),
+      progress: {
+        status: '',
+        value: undefined,
+      },
       dropFiles: [],
     }
   },
@@ -194,13 +213,23 @@ export default {
     formatSize(byte) {
       return formatSizeImp(byte, 10)
     },
+    // async fakeprocess() {
+    //   this.isLoading = true
+    //   setInterval(() => {
+    //     this.progressValue += 10
+    //   }, 100)
+    //   this.isLoading = false
+    // },
     async process() {
       this.isLoading = true
       try {
         const secretRaw = await this.processObject.keys
           .getSecret()
           .toString('base64')
-        await this.processObject.launch(this.dropFiles)
+        await this.processObject.launch(this.dropFiles, (status, value) => {
+          this.progress.status = status
+          this.progress.value = value
+        })
         this.url = `${getUrl.download()}${this.processObject.getIdFile()}#${secretRaw}`
         this.step = 2
         this.toastSuccess('Sent !!')

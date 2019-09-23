@@ -16,7 +16,7 @@ async function reader(zip, file) {
   })
 }
 
-export default async function zipFiles(files) {
+export default async function zipFiles(files, updateCallback) {
   return new Promise((resolve, reject) => {
     const zip = new JSZip()
     const proms = []
@@ -31,13 +31,16 @@ export default async function zipFiles(files) {
       .then(() => {
         // You can use metadata
         resolve(
-          zip.generateNodeStream({
-            name: 'Zip.zip',
-            compression: 'DEFLATE',
-            compressionOptions: {
-              level: 9,
+          zip.generateNodeStream(
+            {
+              name: 'Zip.zip',
+              compression: 'DEFLATE',
+              compressionOptions: {
+                level: 9,
+              },
             },
-          }),
+            updateCallback,
+          ),
         )
       })
       .catch((err) => {

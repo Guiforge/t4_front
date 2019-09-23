@@ -72,9 +72,6 @@ export default {
         this.nonce = await Download.getNonce(this.id)
         await this.getMeta()
       } catch (error) {
-        if (error === 401) {
-          this.toastDanger('File not Found')
-        }
         this.$router.push('/NotFound')
       }
     }
