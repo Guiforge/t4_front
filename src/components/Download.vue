@@ -33,11 +33,17 @@
 
 <script>
 /* eslint-disable new-cap */
+// import stream from 'readable-stream'
+import streamSaver from 'streamsaver'
+
 import Download from '../utils/download'
 import Keys from '../zip-encrypt/keys'
 import abTools from '../utils/abTools'
 import sendDownload from '../utils/sendDownload'
 import encrypt from '../zip-encrypt/encrypt'
+
+const WebStreamsPolyfill = require('web-streams-polyfill/ponyfill')
+
 // import base64 from '../utils/base64'
 // import getUrl from '../utils/getUrl'
 
@@ -80,28 +86,40 @@ export default {
       this.toastOpen(msg, 'is-danger')
     },
     async download() {
-      sendDownload.getFile(this.id, this.signNonce)
-      // const signNonceB64 = await base64.encode(
-      //   JSON.stringify(new Buffer.from(this.signNonce)),
-      // )
-      // return new Promise((resolve, reject) => {
-      //   const xhr = new XMLHttpRequest()
-      //   xhr.onerror = (err) => {
-      //     reject(`Error: ${err.target.status}`)
-      //   }
-      //   xhr.onload = (ev) => {
-      //     if (ev.target.status === 200) {
-      //       console.log(ev.target)
-      //       resolve(ev.target)
-      //     } else {
-      //       reject(ev.target.status)
-      //     }
-      //   }
-      //   xhr.open('GET', getUrl.download(this.id), true)
-      //   xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
-      //   xhr.setRequestHeader('signNonce', signNonceB64)
-      //   xhr.send()
-      // })
+      streamSaver.WritableStream =
+        window.WritableStream || WebStreamsPolyfill.WritableStream
+      // chnage mitm
+      // streamSaver.mitm = ''
+      const fileStream = streamSaver.createWriteStream('filename.zip', {
+        size: this.sizeZip, // (optional) Will show progress
+        writableStrategy: undefined, // (optional)
+        readableStrategy: undefined, // (optional)
+      })
+
+      const res = await sendDownload.getFileStream(this.id, this.signNonce)
+      if (res.status === 200) {
+        // const readableStream = res.body
+        // if (window.WritableStream && readableStream.pipeTo) {
+        //   return readableStream
+        //     .pipeTo(fileStream)
+        //     .then(() => console.log('done writing'))
+        // }
+        const writer = fileStream.getWriter()
+        const reader = res.body.getReader()
+        const pump = () =>
+          reader.read().then((res2) => {
+            if (res2.done) {
+              writer.close()
+            } else {
+              console.log('value', res2.value)
+              console.log(new TextDecoder('utf-8').decode(res2.value))
+              writer.write(res2.value).then(pump)
+            }
+          })
+        pump()
+      } else {
+        console.log('ERROr')
+      }
     },
     async getKeys() {
       const keys = new Keys(new Uint8Array(abTools.b642b(this.key64)))

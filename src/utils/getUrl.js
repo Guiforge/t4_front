@@ -12,8 +12,18 @@ function download() {
   return `${window.location.origin}#${subPath.download}`
 }
 
-function root() {
-  return `process.env.API_URL`
+function root(type) {
+  let ret = process.env.API_URL
+  switch (type) {
+    case 'HOST':
+      ret = process.env.HOST
+      break
+    case 'PORT':
+      ret = process.env.PORT
+      break
+    default:
+  }
+  return ret
 }
 
 function getFile(id) {
