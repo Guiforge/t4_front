@@ -65,7 +65,6 @@ export default class processData {
 
     return new Promise((resolve, reject) => {
       sender.once('finish', () => {
-        cipher.final()
         this._sender
           .send('auth', cipher.getAuthTag())
           .then(() => {

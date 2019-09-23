@@ -90,7 +90,6 @@ export default class Sender {
     util.inherits(Sink, Writable)
 
     Sink.prototype._write = (chunk, encoding, callback) => {
-      console.log('SINK', chunk.length)
       this._socketClient.emit('chunk', chunk)
       callback()
     }
@@ -98,6 +97,7 @@ export default class Sender {
   }
 
   async _sendAuthFile(authTag) {
+    console.log('authTag', authTag)
     return new Promise((resolve, reject) => {
       this._socketClient.emit('authTag', authTag)
       this._socketClient.once('error', reject)

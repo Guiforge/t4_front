@@ -21,7 +21,7 @@
             <div>
               file: file.zip
               <br />
-              size: {{ meta.sizeZip }}
+              size: {{ formatSize(meta.sizeZip) }}
             </div>
             <b-button @click="download">Download</b-button>
           </div>
@@ -34,15 +34,14 @@
 <script>
 /* eslint-disable new-cap */
 // import stream from 'readable-stream'
-import streamSaver from 'streamsaver'
 
+import formatSizeImp from '../utils/formatSize'
 import Download from '../utils/download'
 import Keys from '../zip-encrypt/keys'
 import abTools from '../utils/abTools'
 import sendDownload from '../utils/sendDownload'
 import encrypt from '../zip-encrypt/encrypt'
-
-const WebStreamsPolyfill = require('web-streams-polyfill/ponyfill')
+import streamSaver from '../utils/streamsaver'
 
 // import base64 from '../utils/base64'
 // import getUrl from '../utils/getUrl'
@@ -67,9 +66,19 @@ export default {
     }
   },
   created() {
-    this.key64 = this.$router.currentRoute.hash.substr(1)
-    this.nonce = Download.getNonce(this.id)
-    this.getMeta()
+    const toto = async () => {
+      try {
+        this.key64 = this.$router.currentRoute.hash.substr(1)
+        this.nonce = await Download.getNonce(this.id)
+        await this.getMeta()
+      } catch (error) {
+        if (error === 401) {
+          this.toastDanger('File not Found')
+        }
+        this.$router.push('/NotFound')
+      }
+    }
+    toto()
   },
   methods: {
     toastOpen(msg, type) {
@@ -85,40 +94,28 @@ export default {
     toastDanger(msg) {
       this.toastOpen(msg, 'is-danger')
     },
+    formatSize(byte) {
+      return formatSizeImp(byte, 10)
+    },
     async download() {
-      streamSaver.WritableStream =
-        window.WritableStream || WebStreamsPolyfill.WritableStream
-      // chnage mitm
-      // streamSaver.mitm = ''
       const fileStream = streamSaver.createWriteStream('filename.zip', {
-        size: this.sizeZip, // (optional) Will show progress
-        writableStrategy: undefined, // (optional)
-        readableStrategy: undefined, // (optional)
+        size: this.sizeZip,
       })
-
-      const res = await sendDownload.getFileStream(this.id, this.signNonce)
-      if (res.status === 200) {
-        // const readableStream = res.body
-        // if (window.WritableStream && readableStream.pipeTo) {
-        //   return readableStream
-        //     .pipeTo(fileStream)
-        //     .then(() => console.log('done writing'))
-        // }
-        const writer = fileStream.getWriter()
-        const reader = res.body.getReader()
-        const pump = () =>
-          reader.read().then((res2) => {
-            if (res2.done) {
-              writer.close()
-            } else {
-              console.log('value', res2.value)
-              console.log(new TextDecoder('utf-8').decode(res2.value))
-              writer.write(res2.value).then(pump)
-            }
-          })
-        pump()
-      } else {
-        console.log('ERROr')
+      const decipher = encrypt.createDecipherFile(
+        await this.keys.getKeyFile(),
+        this.meta.files.ivFiles,
+      )
+      try {
+        decipher.setAuthTag(this.meta.authTag)
+        await sendDownload.download(
+          this.id,
+          this.signNonce,
+          fileStream,
+          decipher,
+        )
+      } catch (error) {
+        fileStream.abort()
+        this.toastDanger(error)
       }
     },
     async getKeys() {
@@ -127,10 +124,9 @@ export default {
     },
     async getMeta() {
       const metaEnc = await this.getRemoteData()
-      await this.decryptMeta(metaEnc)
       this.meta = { sizeZip: metaEnc.sizeZip }
       this.meta.files = await this.decryptMeta(metaEnc)
-      console.log('this.meta', this.meta)
+      this.meta.authTag = metaEnc.authTag
     },
     async decryptMeta(meta) {
       return encrypt.decryptMeta(

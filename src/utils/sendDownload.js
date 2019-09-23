@@ -17,6 +17,7 @@ async function getMeta(id, signNonce) {
         const meta = JSON.parse(ev.target.response).meta
         meta.enc.auth = Buffer.from(meta.enc.auth, 'base64')
         meta.ivMeta = Buffer.from(meta.ivMeta, 'base64')
+        meta.authTag = Buffer.from(meta.authTag, 'base64')
         resolve(meta)
       } else {
         reject(ev.target.status)
@@ -36,7 +37,40 @@ async function getFileStream(id, signNonce) {
   return fetch(getUrl.getFile(id), { headers: { signNonce: signNonceB64 } })
 }
 
+async function download(id, signNonce, fileStream, decipher) {
+  const res = await getFileStream(id, signNonce)
+
+  return new Promise((resolve, reject) => {
+    if (res.status === 200) {
+      const reader = res.body.getReader()
+      const writer = fileStream.getWriter()
+      const pump = () =>
+        reader.read().then((res2) => {
+          try {
+            if (res2.done) {
+              const p = decipher.final()
+              writer.write(p).then(() => {
+                writer.close()
+                resolve()
+              })
+            } else {
+              const p = decipher.update(Buffer.from(res2.value))
+              writer.write(p).then(pump)
+            }
+          } catch (error) {
+            reject('File is corrupted')
+            writer.abort()
+          }
+        })
+      pump()
+    } else {
+      reject('To download file')
+    }
+  })
+}
+
 export default {
   getMeta,
   getFileStream,
+  download,
 }

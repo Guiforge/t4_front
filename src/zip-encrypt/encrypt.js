@@ -20,7 +20,9 @@ function decryptMeta(key, iv, meta) {
   let decrypt = decipher.update(meta.encrypted, 'hex', 'utf8')
   decipher.setAuthTag(meta.auth)
   decrypt += decipher.final('utf8')
-  return JSON.parse(decrypt.toString())
+  const metaDecrypt = JSON.parse(decrypt.toString())
+  metaDecrypt.ivFiles = Buffer.from(metaDecrypt.ivFiles.data)
+  return metaDecrypt
 }
 
 export default {

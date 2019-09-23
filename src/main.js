@@ -8,7 +8,6 @@ import router from './router'
 
 Vue.config.productionTip = false
 
-console.log('p', window.WebStreamsPolyfill)
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

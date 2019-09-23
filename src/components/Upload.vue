@@ -205,11 +205,9 @@ export default {
         this.step = 2
         this.toastSuccess('Sent !!')
       } catch (error) {
-        console.log(error)
         if (`${error.name}` === 'TypeError') {
           this.toastDanger('Intern Error')
         } else {
-          console.error(error)
           this.toastDanger(`${error}`)
         }
       }
