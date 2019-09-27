@@ -90,6 +90,7 @@ export default class Sender {
     util.inherits(Sink, Writable)
 
     Sink.prototype._write = (chunk, encoding, callback) => {
+      console.log('chunksize', chunk.length)
       this._socketClient.emit('chunk', chunk)
       callback()
     }

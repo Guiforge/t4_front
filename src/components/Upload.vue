@@ -131,8 +131,10 @@
 
     <!-- Step Progress -->
     <div v-if="isLoading">
-      <h2>{{ progress.status }}</h2>
-      <h3>({{ progress.value }}%)</h3>
+      <h2 v-if="progress.status && progress.status !== null">
+        {{ progress.status }}
+      </h2>
+      <h3 v-if="progress.value">({{ progress.value }}%)</h3>
       <progress
         :value="progress.value"
         class="progress is-info"
@@ -168,7 +170,7 @@ export default {
       },
       processObject: new Process(),
       progress: {
-        status: '',
+        status: 'Initialisation',
         value: undefined,
       },
       dropFiles: [],
@@ -195,11 +197,18 @@ export default {
       return false
     },
     toastOpen(msg, type) {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
-      this.$toast.open({
-        message: msg,
-        type,
-      })
+      // this.$buefy.snackbar.open(
+      //   "Default, positioned bottom-right with a green 'OK' button",
+      // )
+      if (this.$buefy.toast) {
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
+        this.$buefy.toast.open({
+          message: msg,
+          type,
+        })
+      } else {
+        console.log('toast', { msg, type })
+      }
     },
     toastSuccess(msg) {
       this.toastOpen(msg, 'is-success')

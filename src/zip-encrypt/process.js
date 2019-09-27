@@ -4,6 +4,7 @@ import zipFiles from './zip'
 import KeysConstruct from './keys'
 import encrypt from './encrypt'
 import Sender from '../utils/sender'
+// import StreamFile from '..é/utils/fileReaderStream'
 
 // /**
 // * A nodejs stream using a worker as source.
@@ -55,18 +56,26 @@ export default class processData {
   }
 
   async processFile(progress) {
-    function updateCallback(metadata) {
-      progress(`${metadata.currentFile}`, metadata.percent.toFixed(2))
-    }
-    const streamZip = await zipFiles(this.files, updateCallback)
+    // function updateCallback(metadata) {
+    //   progress(`${metadata.currentFile}`, metadata.percent.toFixed(2))
+    // }
+    progress('n', 30)
+    const streamZip = await zipFiles(this.files)
     const cipher = encrypt.createCipherFile(
       await this.keys.getKeyFile(),
       this.keys.getIvFile(),
     )
     const sender = await this._sender.send('file')
+    // const toto = StreamFile.createReadStreamFile(this.files[0])
     streamZip.pipe(cipher).pipe(sender)
-
     return new Promise((resolve, reject) => {
+      streamZip.finalize()
+      sender.on('finish', () => {
+        console.log(`${streamZip.pointer()} total bytes`)
+        console.log(
+          'archiver has been finalized and the output file descriptor has closed.',
+        )
+      })
       sender.once('finish', () => {
         this._sender
           .send('auth', cipher.getAuthTag())
@@ -83,6 +92,10 @@ export default class processData {
   async launch(files, progress) {
     this.files = files
     await this.processMeta()
-    await this.processFile(progress)
+    try {
+      await this.processFile(progress)
+    } catch (error) {
+      console.log(error)
+    }
   }
 }

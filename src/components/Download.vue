@@ -79,11 +79,13 @@ export default {
   },
   methods: {
     toastOpen(msg, type) {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
-      this.$toast.open({
-        message: msg,
-        type,
-      })
+      if (this.$buefy.toast) {
+        // eslint-disable-next-line security/detect-non-literal-fs-filename
+        this.$buefy.toast.open({
+          message: msg,
+          type,
+        })
+      }
     },
     toastSuccess(msg) {
       this.toastOpen(msg, 'is-success')
