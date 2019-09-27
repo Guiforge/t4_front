@@ -1,19 +1,8 @@
-import { Readable, Stream } from 'readable-stream'
-import realStream from 'stream'
+import { Readable } from 'readable-stream'
 
 import util from 'util'
 
-const u2 = require('../../node_modules/compress-commons/lib/util')
-const u = require('archiver-utils')
-
 const chunkSize = 1024 * 1024
-
-function isStream(source) {
-  return source instanceof realStream.Stream || source instanceof Stream
-}
-
-u.isStream = isStream
-u2.isStream = isStream
 
 function ReadStreamFile(file, options) {
   Readable.call(this, options)
@@ -28,11 +17,15 @@ function ReadStreamFile(file, options) {
 
 util.inherits(ReadStreamFile, Readable)
 
-function createReadStreamFile(file, optionsParam) {
+function createReadStreamFile(file, optionsParam, noEnd) {
   function internRead(size) {
     const chunkSizeTmp = size || chunkSize
     // when done, push null and exit loop
     if (this.offset >= this.file.size) {
+      this.emit('fin')
+      if (noEnd) {
+        return null
+      }
       return this.push(null)
     }
     this.fileReader.onloadend = (event) => {

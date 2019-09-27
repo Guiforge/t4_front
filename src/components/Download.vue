@@ -97,7 +97,7 @@ export default {
       return formatSizeImp(byte, 10)
     },
     async download() {
-      const fileStream = streamSaver.createWriteStream('filename.zip', {
+      const fileStream = streamSaver.createWriteStream('filename.tar.gz', {
         size: this.sizeZip,
       })
       const decipher = encrypt.createDecipherFile(

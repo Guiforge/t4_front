@@ -1,10 +1,9 @@
 /* eslint-disable no-underscore-dangle */
-
-import zipFiles from './zip'
+import zlib from 'zlib'
+import zipFiles from './tar'
 import KeysConstruct from './keys'
 import encrypt from './encrypt'
 import Sender from '../utils/sender'
-// import StreamFile from '..é/utils/fileReaderStream'
 
 // /**
 // * A nodejs stream using a worker as source.
@@ -66,16 +65,12 @@ export default class processData {
       this.keys.getIvFile(),
     )
     const sender = await this._sender.send('file')
-    // const toto = StreamFile.createReadStreamFile(this.files[0])
-    streamZip.pipe(cipher).pipe(sender)
+    const gzip = zlib.createGzip()
+    streamZip
+      .pipe(gzip)
+      .pipe(cipher)
+      .pipe(sender)
     return new Promise((resolve, reject) => {
-      streamZip.finalize()
-      sender.on('finish', () => {
-        console.log(`${streamZip.pointer()} total bytes`)
-        console.log(
-          'archiver has been finalized and the output file descriptor has closed.',
-        )
-      })
       sender.once('finish', () => {
         this._sender
           .send('auth', cipher.getAuthTag())
