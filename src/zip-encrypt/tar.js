@@ -15,8 +15,13 @@ function pad(numParm, bytes, base) {
   return '000000000000'.substr(num.length + 12 - bytes) + num
 }
 
-function Tar() {
+function nextMultiple(number, quo) {
+  return number + (quo - (number % quo))
+}
+
+function Tar(progress) {
   this.written = 0
+  this.globalSize = 0
   this.recordSize = 512
   this.files = []
   this.names = []
@@ -24,9 +29,20 @@ function Tar() {
   this.stream = new Transform({
     transform(chunk, encoding, cb) {
       this.push(chunk)
-
       cb()
     },
+  })
+
+  this.stream.on('data', () => {
+    if (this.globalSize) {
+      progress(undefined, ((this.written / this.globalSize) * 100).toFixed(2))
+    }
+  })
+
+  this.stream.on('drain', () => {
+    if (this.globalSize) {
+      progress(undefined, ((this.written / this.globalSize) * 100).toFixed(2))
+    }
   })
 
   this.getName = (name) => {
@@ -62,12 +78,11 @@ function Tar() {
       }
       ret = pre + find.count + ext
     }
-    console.log('NAME:', ret)
     return ret
   }
 
   this.go = () => {
-    console.log('GO', this)
+    this.globalSize = nextMultiple(this.globalSize, this.recordSize)
     if (this.files.length) {
       this.append(this.files.pop())
       // this.pad()
@@ -84,27 +99,22 @@ function Tar() {
   }
 
   this.file = (file) => {
+    this.globalSize += nextMultiple(file.size, this.recordSize) + 512
     this.files.push(file)
   }
 
-  this.append = async (file, opts, callback) => {
+  this.append = async (file) => {
     if (!(file instanceof File)) {
       throw Error(
         'Error the file is not File Object: https://developer.mozilla.org/en-US/docs/Web/API/File',
       )
     }
-    console.log('append:', file.name)
-    if (typeof opts === 'function') {
-      callback = opts
-      opts = {}
-    }
+    progress(file.name, undefined)
 
-    opts = opts || {}
-
-    const mode = opts.mode || 0o777 & 0xfff
-    const mtime = opts.mtime || Math.floor(+new Date() / 1000)
-    const uid = opts.uid || 0
-    const gid = opts.gid || 0
+    const mode = 0o777 & 0xfff
+    const mtime = Math.floor(+new Date() / 1000)
+    const uid = 0
+    const gid = 0
 
     const data = {
       fileName: this.getName(file.name),
@@ -114,13 +124,12 @@ function Tar() {
       fileSize: pad(file.size, 11),
       mtime: pad(mtime, 11),
       checksum: '        ',
-      type: '0', // just a file
+      type: '0',
       ustar: 'ustar  ',
-      owner: opts.owner || '',
-      group: opts.group || '',
+      owner: '',
+      group: '',
     }
 
-    // calculate the checksum
     let checksum = 0
     Object.keys(data).forEach((key) => {
       let i
@@ -131,26 +140,18 @@ function Tar() {
         checksum += value.charCodeAt(i)
       }
     })
-
     data.checksum = `${pad(checksum, 6)}\u0000 `
-
     const headerArr = header.format(data)
-
     this.push(headerArr)
 
     this.written += headerArr.length
 
     this.pushFile(file)
 
-    if (typeof callback === 'function') {
-      callback(this.out)
-    }
-
     return this.out
   }
 
   this.push = (data) => {
-    console.log('data', data.length)
     this._pad += data.length
     this.written += data.length
     this._pad = this._pad % this.recordSize
@@ -159,7 +160,6 @@ function Tar() {
 
   this.pad = () => {
     const padding = this.recordSize - this._pad
-    console.log('pad', { _pad: this._pad, padding, w: this.written })
     this.push(Buffer.alloc(padding))
   }
 
@@ -174,7 +174,6 @@ function Tar() {
     })
 
     fileStream.on('fin', () => {
-      console.log('FIN:', file.name, this.files)
       fileStream.unpipe(this.stream)
       fileStream.push(null)
       this.pad()
@@ -183,8 +182,8 @@ function Tar() {
   }
 }
 
-export default async function zipFiles(files) {
-  const tar = new Tar()
+export default async function zipFiles(files, progress) {
+  const tar = new Tar(progress)
 
   files.forEach((file) => {
     tar.file(file)
@@ -192,102 +191,3 @@ export default async function zipFiles(files) {
   tar.go()
   return tar.stream
 }
-
-// import fileReaderStream from 'filereader-stream'
-
-// const zlib = require('zlib')
-// const JSZip = require('jszip')
-// const archiver = require('archiver')
-
-// async function reader(zip, file) {
-//   return new Promise((resolve, reject) => {
-//     try {
-//       const fileRead = StreamFile.createReadStreamFile(file)
-//       fileRead.once('end', () => {
-//         console.log('END', file.name)
-//       })
-//       // eslint-disable-xnext-line
-//       zip.file(file.name, fileRead)
-//       resolve(file.name)
-//     } catch (error) {
-//       console.log(error)
-//       reject(Error(`Cannot read: ${file.name}`))
-//     }
-//   })
-// }
-
-// export default async function zipFiles(files) {
-//   return new Promise((resolve, reject) => {
-//     const zip = new JSZip()
-//     let proms = []
-//     files.forEach((file) => {
-//       proms += reader(zip, file)
-//     })
-
-//     Promise.all(proms)
-//       .then(() => {
-//         // You can use metadata
-//         console.log('TOTO')
-//         resolve(
-//           zip.generateNodeStream({
-//             name: 'Zip.zip',
-//             compression: 'DEFLATE',
-//             compressionOptions: {
-//               level: 9,
-//             },
-//           }),
-//         )
-//       })
-//       .catch((err) => {
-//         reject(err)
-//       })
-//   })
-// }
-
-// export default async function zipFiles(files) {
-//   // return new Promise((resolve, reject) => {
-//   const archive = archiver('tar', {
-//     zlib: { level: 9 }, // Sets the compression level.
-//   })
-//   // const proms = []
-
-//   // All promeses
-//   files.forEach((file) => {
-//     const filestream = StreamFile.createReadStreamFile(file)
-//     filestream.on('data', () => {
-//       console.log(file.name, 'read data')
-//     })
-//     // console.log('stream', tptp instanceof stream.Stream, stream.Stream)
-//     // console.log('stream', tptp instanceof StreamFile.Stream, StreamFile.Stream)
-
-//     filestream.once('end', () => {
-//       console.log('end', file.name)
-//     })
-//     archive.append(filestream, { name: file.name })
-//     // proms.push(reader(zip, file))
-//   })
-//   return archive
-
-//   //   // Wait ALL
-//   //   Promise.all(proms)
-//   //     .then(() => {
-//   //       // You can use metadata
-//   //       console.log('TOTO')
-//   //       resolve(
-//   //         zip.generateNodeStream(
-//   //           {
-//   //             name: 'Zip.zip',
-//   //             compression: 'DEFLATE',
-//   //             compressionOptions: {
-//   //               level: 9,
-//   //             },
-//   //           },
-//   //           updateCallback,
-//   //         ),
-//   //       )
-//   //     })
-//   //     .catch((err) => {
-//   //       reject(err)
-//   //     })
-//   // })
-// }

@@ -17,7 +17,18 @@
       </div>
       <div class="card-content">
         <div class="content">
-          <div v-if="meta">
+          <div v-if="isLoading">
+            <h2 v-if="progress.status && progress.status !== null">
+              {{ progress.status }}
+            </h2>
+            <h3 v-if="progress.value">({{ progress.value }}%)</h3>
+            <progress
+              :value="progress.value"
+              class="progress is-info"
+              max="100"
+            ></progress>
+          </div>
+          <div v-if="meta && !isLoading">
             <div>
               file: file.zip
               <br />
@@ -63,19 +74,25 @@ export default {
       signNonce: undefined,
       keys: undefined,
       meta: undefined,
+      progress: {
+        status: 'Initialisation',
+        value: undefined,
+      },
+      isLoading: false,
     }
   },
   created() {
-    const toto = async () => {
+    const init = async () => {
       try {
         this.key64 = this.$router.currentRoute.hash.substr(1)
         this.nonce = await Download.getNonce(this.id)
         await this.getMeta()
       } catch (error) {
+        // TODO not auth
         this.$router.push('/NotFound')
       }
     }
-    toto()
+    init()
   },
   methods: {
     toastOpen(msg, type) {
@@ -97,8 +114,9 @@ export default {
       return formatSizeImp(byte, 10)
     },
     async download() {
+      this.isLoading = true
       const fileStream = streamSaver.createWriteStream('filename.tar.gz', {
-        size: this.sizeZip,
+        size: this.meta.sizeZip,
       })
       const decipher = encrypt.createDecipherFile(
         await this.keys.getKeyFile(),
@@ -111,6 +129,14 @@ export default {
           this.signNonce,
           fileStream,
           decipher,
+          (size) => {
+            this.progress.value = ((size / this.meta.sizeZip) * 100).toFixed(2)
+            if (this.progress.value === 100) {
+              this.progress.status = 'Finish !!'
+            } else {
+              this.progress.status = 'download ...'
+            }
+          },
         )
       } catch (error) {
         fileStream.abort()

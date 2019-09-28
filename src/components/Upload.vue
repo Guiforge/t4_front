@@ -222,13 +222,6 @@ export default {
     formatSize(byte) {
       return formatSizeImp(byte, 10)
     },
-    // async fakeprocess() {
-    //   this.isLoading = true
-    //   setInterval(() => {
-    //     this.progressValue += 10
-    //   }, 100)
-    //   this.isLoading = false
-    // },
     async process() {
       this.isLoading = true
       try {
@@ -236,8 +229,12 @@ export default {
           .getSecret()
           .toString('base64')
         await this.processObject.launch(this.dropFiles, (status, value) => {
-          this.progress.status = status
-          this.progress.value = value
+          if (status) {
+            this.progress.status = status
+          }
+          if (value) {
+            this.progress.value = value
+          }
         })
         this.url = `${getUrl.download()}${this.processObject.getIdFile()}#${secretRaw}`
         this.step = 2

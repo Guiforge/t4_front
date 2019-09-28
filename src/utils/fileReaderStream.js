@@ -1,3 +1,4 @@
+/* eslint-disable no-unreachable */
 import { Readable } from 'readable-stream'
 
 import util from 'util'
@@ -19,6 +20,7 @@ util.inherits(ReadStreamFile, Readable)
 
 function createReadStreamFile(file, optionsParam, noEnd) {
   function internRead(size) {
+    // throw Error('test error')
     const chunkSizeTmp = size || chunkSize
     // when done, push null and exit loop
     if (this.offset >= this.file.size) {

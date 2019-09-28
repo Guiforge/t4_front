@@ -37,11 +37,12 @@ async function getFileStream(id, signNonce) {
   return fetch(getUrl.getFile(id), { headers: { signNonce: signNonceB64 } })
 }
 
-async function download(id, signNonce, fileStream, decipher) {
+async function download(id, signNonce, fileStream, decipher, progress) {
   const res = await getFileStream(id, signNonce)
 
   return new Promise((resolve, reject) => {
     if (res.status === 200) {
+      let counter = 0
       const reader = res.body.getReader()
       const writer = fileStream.getWriter()
       const pump = () =>
@@ -56,6 +57,8 @@ async function download(id, signNonce, fileStream, decipher) {
             } else {
               const p = decipher.update(Buffer.from(res2.value))
               writer.write(p).then(pump)
+              counter += p.byteLength
+              progress(counter)
             }
           } catch (error) {
             reject('File is corrupted')

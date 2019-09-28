@@ -55,11 +55,7 @@ export default class processData {
   }
 
   async processFile(progress) {
-    // function updateCallback(metadata) {
-    //   progress(`${metadata.currentFile}`, metadata.percent.toFixed(2))
-    // }
-    progress('n', 30)
-    const streamZip = await zipFiles(this.files)
+    const streamZip = await zipFiles(this.files, progress)
     const cipher = encrypt.createCipherFile(
       await this.keys.getKeyFile(),
       this.keys.getIvFile(),
