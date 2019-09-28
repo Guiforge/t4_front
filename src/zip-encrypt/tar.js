@@ -33,19 +33,14 @@ function Tar(progress) {
     },
   })
 
-  this.stream.on('data', () => {
-    if (this.globalSize) {
-      progress(undefined, ((this.written / this.globalSize) * 100).toFixed(2))
-    }
-  })
-
   this.stream.on('drain', () => {
     if (this.globalSize) {
       progress(undefined, ((this.written / this.globalSize) * 100).toFixed(2))
     }
   })
 
-  this.getName = (name) => {
+  this.getName = (nameParam) => {
+    const name = Buffer.from(nameParam).toString('ascii')
     const max = 97
     const patt = /\.[0-9a-z]+$/i
     let ext = patt.exec(name)
