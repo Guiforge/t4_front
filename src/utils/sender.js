@@ -13,7 +13,9 @@ export default class Sender {
     this.onError = onError || _onNothing
     this.error = false
   }
-
+  getOwner() {
+    return { id: this._id, owner: this._owner }
+  }
   _initlistener() {
     this._socketClient.on('error', (error) => {
       this.onError(error)
@@ -48,25 +50,6 @@ export default class Sender {
         this._socketClient.removeEventListener('error', reject)
         resolve()
       })
-
-      // const xhr = new XMLHttpRequest()
-      // xhr.onprogress = this._updateProgress.bind(this)
-      // xhr.onerror = (err) => {
-      //   reject(`Error: ${err.target.status}`)
-      // }
-      // xhr.onload = (ev) => {
-      //   if (ev.target.status === 200) {
-      //     const res = JSON.parse(ev.target.response)
-      //     this._id = res.id
-      //     this._owner = res.owner
-      //     resolve({ id: this._id, owner: this._owner })
-      //   } else {
-      //     reject('Unable to send Meta')
-      //   }
-      // }
-      // xhr.open('POST', getUrl.uploadMeta(), true)
-      // xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
-      // xhr.send(JSON.stringify(meta))
     })
   }
 

@@ -163,7 +163,7 @@
         </div>
       </div>
     </article>
-
+    {{ owners }}
     <!-- Step Progress -->
     <div v-if="isLoading">
       <h2 v-if="progress.status && progress.status !== null">
@@ -206,6 +206,7 @@ export default {
         value: undefined,
       },
       dropFiles: [],
+      owners: [],
     }
   },
   beforeRouteLeave(to, from, next) {
@@ -225,7 +226,7 @@ export default {
     window.removeEventListener('beforeunload', this.onBeforeUnload)
   },
   mounted() {
-    if (localStorage.owners) {
+    if (localStorage && localStorage.getItem('owners')) {
       this.owners = JSON.parse(localStorage.getItem('owners'))
     }
   },
@@ -284,6 +285,10 @@ export default {
     formatSize(byte) {
       return formatSizeImp(byte, 10)
     },
+    newOwner(newOwner) {
+      this.owners.push(newOwner)
+      localStorage.setItem('owners', JSON.stringify(this.owners))
+    },
     async process() {
       this.isLoading = true
       try {
@@ -301,9 +306,11 @@ export default {
         })
         this.url = `${getUrl.download()}${this.processObject.getIdFile()}#${secretRaw}`
         this.step = 2
+        this.newOwner(this.processObject.getOwner())
         this.toastSuccess('Sent !!')
       } catch (error) {
         this.isLoading = false
+        console.log(error)
         if (`${error.name}` === 'TypeError') {
           this.toastDanger('Intern Error')
         } else {

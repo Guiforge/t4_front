@@ -34,6 +34,10 @@ export default class processData {
     // this.data = this.dataCreator()
   }
 
+  getOwner() {
+    return this._sender.getOwner()
+  }
+
   getIdFile() {
     return this._sender._id
   }
