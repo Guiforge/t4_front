@@ -33,11 +33,17 @@ function Tar(progress) {
     },
   })
 
-  this.stream.on('drain', () => {
-    if (this.globalSize) {
-      progress(undefined, ((this.written / this.globalSize) * 100).toFixed(2))
-    }
-  })
+  // this.stream.on('drain', () => {
+  //   if (this.globalSize) {
+  //     progress(undefined, ((this.written / this.globalSize) * 100).toFixed(2))
+  //   }
+  // })
+
+  // this.stream.on('data', () => {
+  //   if (this.globalSize) {
+  //     progress(undefined, ((this.written / this.globalSize) * 100).toFixed(2))
+  //   }
+  // })
 
   this.getName = (nameParam) => {
     const name = Buffer.from(nameParam).toString('ascii')
@@ -87,7 +93,6 @@ function Tar(progress) {
   }
 
   this.end = () => {
-    console.log('end')
     this.pad(true)
     this.pad(true)
     this.stream.end()
@@ -151,6 +156,7 @@ function Tar(progress) {
     this.written += data.length
     this._pad = this._pad % this.recordSize
     this.stream.write(data)
+    progress(undefined, ((this.written / this.globalSize) * 100).toFixed(2))
   }
 
   this.pad = () => {
@@ -166,6 +172,7 @@ function Tar(progress) {
       this._pad += c.length
       this.written += c.length
       this._pad = this._pad % this.recordSize
+      progress(undefined, ((this.written / this.globalSize) * 100).toFixed(2))
     })
 
     fileStream.on('fin', () => {

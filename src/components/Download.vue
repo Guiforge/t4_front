@@ -79,9 +79,24 @@ export default {
         value: undefined,
       },
       isLoading: false,
+      fileStream: undefined,
+      decipher: undefined,
     }
   },
+  beforeRouteLeave(to, from, next) {
+    if (!this.isLoading || this.confirmLeave()) {
+      next()
+    } else {
+      // Cancel navigation
+      next(false)
+    }
+  },
+  beforeDestroy() {
+    window.removeEventListener('beforeunload', this.onBeforeUnload)
+  },
   created() {
+    window.addEventListener('beforeunload', this.onBeforeUnload)
+
     const init = async () => {
       try {
         this.key64 = this.$router.currentRoute.hash.substr(1)
@@ -95,6 +110,20 @@ export default {
     init()
   },
   methods: {
+    onBeforeUnload(e) {
+      if (this.isLoading && !this.confirmLeave()) {
+        // Cancel the event
+        e.preventDefault()
+        // Chrome requires returnValue to be set
+        e.returnValue = ''
+      }
+    },
+    confirmLeave() {
+      // eslint-disable-next-line no-alert
+      return window.confirm(
+        'Do you really want to leave? you have cancel upload',
+      )
+    },
     toastOpen(msg, type) {
       if (this.$buefy.toast) {
         // eslint-disable-next-line security/detect-non-literal-fs-filename
@@ -115,23 +144,25 @@ export default {
     },
     async download() {
       this.isLoading = true
-      const fileStream = streamSaver.createWriteStream('filename.tar.gz', {
+      this.fileStream = streamSaver.createWriteStream('filename.tar.gz', {
         size: this.meta.sizeZip,
       })
-      const decipher = encrypt.createDecipherFile(
+      this.decipher = encrypt.createDecipherFile(
         await this.keys.getKeyFile(),
         this.meta.files.ivFiles,
       )
       try {
-        decipher.setAuthTag(this.meta.authTag)
+        this.decipher.setAuthTag(this.meta.authTag)
         await sendDownload.download(
           this.id,
           this.signNonce,
-          fileStream,
-          decipher,
+          this.fileStream,
+          this.decipher,
           (size) => {
             this.progress.value = ((size / this.meta.sizeZip) * 100).toFixed(2)
-            if (this.progress.value === 100) {
+            if (this.progress.value === '100.00' && this.isLoading) {
+              this.isLoading = false
+              this.$router.push('/')
               this.progress.status = 'Finish !!'
             } else {
               this.progress.status = 'download ...'
@@ -139,8 +170,8 @@ export default {
           },
         )
       } catch (error) {
-        fileStream.abort()
         this.toastDanger(error)
+        this.fileStream.abort()
       }
     },
     async getKeys() {

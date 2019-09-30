@@ -16,7 +16,6 @@ export default class Sender {
 
   _initlistener() {
     this._socketClient.on('error', (error) => {
-      console.log('error socket', error)
       this.onError(error)
       this.error = error || 'error'
     })
@@ -90,7 +89,6 @@ export default class Sender {
     util.inherits(Sink, Writable)
 
     Sink.prototype._write = (chunk, encoding, callback) => {
-      console.log('chunksize', chunk.length)
       this._socketClient.emit('chunk', chunk)
       callback()
     }
@@ -98,14 +96,12 @@ export default class Sender {
   }
 
   async _sendAuthFile(authTag) {
-    console.log('authTag', authTag)
     return new Promise((resolve, reject) => {
       this._socketClient.emit('authTag', authTag)
       this._socketClient.once('error', reject)
 
       this._socketClient.once('authTag', () => {
         this._socketClient.removeEventListener('error', reject)
-        console.log('sendAuthfile OK !!')
         resolve()
       })
     })

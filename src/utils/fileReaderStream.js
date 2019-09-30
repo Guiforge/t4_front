@@ -34,7 +34,6 @@ function createReadStreamFile(file, optionsParam, noEnd) {
       let data = event.target.result
       if (data instanceof ArrayBuffer) {
         data = Buffer.from(new Uint8Array(event.target.result))
-        console.log('C', data.byteLength)
       }
       this.push(data)
     }

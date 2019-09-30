@@ -176,12 +176,42 @@ export default {
       dropFiles: [],
     }
   },
+  beforeRouteLeave(to, from, next) {
+    if (!this.isLoading || this.confirmLeave()) {
+      next()
+    } else {
+      // Cancel navigation
+      next(false)
+    }
+  },
+
+  created() {
+    window.addEventListener('beforeunload', this.onBeforeUnload)
+  },
+
+  beforeDestroy() {
+    window.removeEventListener('beforeunload', this.onBeforeUnload)
+  },
   mounted() {
     if (localStorage.owners) {
       this.owners = JSON.parse(localStorage.getItem('owners'))
     }
   },
   methods: {
+    onBeforeUnload(e) {
+      if (this.isLoading && !this.confirmLeave()) {
+        // Cancel the event
+        e.preventDefault()
+        // Chrome requires returnValue to be set
+        e.returnValue = ''
+      }
+    },
+    confirmLeave() {
+      // eslint-disable-next-line no-alert
+      return window.confirm(
+        'Do you really want to leave? you have cancel upload',
+      )
+    },
     changeStep(isAdd) {
       if (isAdd) {
         this.step = this.step ? this.step : this.step + 1
