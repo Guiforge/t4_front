@@ -33,8 +33,8 @@
         <div class="content">
           <p>
             This url will expire in
-            <strong>{{ option.download }}</strong> downloads or in
-            <strong>{{ option.day }}</strong> days
+            <strong>{{ option.down }}</strong> downloads or in
+            <strong>{{ option.days }}</strong> days
           </p>
           <b-field>
             <p class="control">
@@ -47,7 +47,8 @@
               type="text"
               readonly
               expanded
-            ></b-input>
+            >
+            </b-input>
           </b-field>
           <b-field>
             <button class="button is-primary" @click="toCopyUrl()">
@@ -83,27 +84,51 @@
             </b-field>
             <section>
               <div v-if="dropFiles.length">
-                <section>
-                  <b-notification
-                    v-for="(file, index) in dropFiles"
-                    :key="index"
-                    type="is-info"
-                    aria-close-label="Close notification"
-                    @close="
-                      deleteDropFile(index)
-                      changeStep(false)
-                    "
+                <b-collapse class="card" aria-id="contentIdForA11y3">
+                  <div
+                    slot="trigger"
+                    slot-scope="props"
+                    class="card-header"
+                    role="button"
+                    aria-controls="contentIdForA11y3"
                   >
-                    <strong>{{ file.name }}</strong>
-                    <small> {{ formatSize(file.size) }}</small>
-                  </b-notification>
-                </section>
+                    <p class="card-header-title">
+                      Download file
+                    </p>
+                    <a class="card-header-icon">
+                      <b-icon :icon="props.open ? 'caret-down' : 'caret-up'">
+                      </b-icon>
+                    </a>
+                  </div>
+                  <div class="card-content">
+                    <div class="content">
+                      <section>
+                        <b-notification
+                          v-for="(file, index) in dropFiles"
+                          :key="index"
+                          type="is-info"
+                          aria-close-label="Close notification"
+                          @close="
+                            deleteDropFile(index)
+                            changeStep(false)
+                          "
+                        >
+                          <strong>{{ file.name }}</strong>
+                          <small> {{ formatSize(file.size) }}</small>
+                        </b-notification>
+                      </section>
+                    </div>
+                  </div>
+                </b-collapse>
               </div>
             </section>
+            <br />
+            <br />
+            <br />
             <div v-if="dropFiles.length" class="container">
               <b-field label="Number of days">
                 <b-numberinput
-                  v-model="option.day"
+                  v-model="option.days"
                   min="1"
                   max="10"
                   controls-rounded
@@ -112,7 +137,7 @@
               </b-field>
               <b-field label="Number of download">
                 <b-numberinput
-                  v-model="option.download"
+                  v-model="option.down"
                   min="1"
                   max="10"
                   controls-rounded
@@ -121,9 +146,19 @@
               </b-field>
             </div>
             <br />
-            <b-button type="is-primary" @click="process()">
+            <b-button
+              v-if="dropFiles.length"
+              type="is-primary"
+              @click="process()"
+            >
               Upload
             </b-button>
+            <b-button v-if="!dropFiles.length" type="is-primary" disabled>
+              Upload
+            </b-button>
+            <br />
+            <br />
+            <br />
           </section>
         </div>
       </div>
@@ -135,11 +170,8 @@
         {{ progress.status }}
       </h2>
       <h3 v-if="progress.value">({{ progress.value }}%)</h3>
-      <progress
-        :value="progress.value"
-        class="progress is-info"
-        max="100"
-      ></progress>
+      <progress :value="progress.value" class="progress is-info" max="100">
+      </progress>
     </div>
 
     <!-- <b-loading
@@ -165,8 +197,8 @@ export default {
       url: null,
       isLoading: false,
       option: {
-        download: 1,
-        day: 1,
+        down: 1,
+        days: 1,
       },
       processObject: new Process(),
       progress: {
@@ -258,6 +290,7 @@ export default {
         const secretRaw = await this.processObject.keys
           .getSecret()
           .toString('base64')
+        this.processObject.opt = this.option
         await this.processObject.launch(this.dropFiles, (status, value) => {
           if (status) {
             this.progress.status = status
@@ -270,6 +303,7 @@ export default {
         this.step = 2
         this.toastSuccess('Sent !!')
       } catch (error) {
+        this.isLoading = false
         if (`${error.name}` === 'TypeError') {
           this.toastDanger('Intern Error')
         } else {

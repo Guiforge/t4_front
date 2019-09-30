@@ -14,9 +14,15 @@ import Sender from '../utils/sender'
 // * @param {Function} updateCb the update callback.
 // */
 export default class processData {
-  constructor(options) {
+  constructor(options, onError) {
     this.keys = new KeysConstruct()
-    this._sender = new Sender()
+    this._sender = new Sender(undefined, (e) => {
+      if (onError) {
+        onError(e)
+      } else {
+        throw e
+      }
+    })
     this.opt = {
       days: 1,
       down: 1,

@@ -19,6 +19,14 @@ export default class Sender {
       this.onError(error)
       this.error = error || 'error'
     })
+    this._socketClient.on('connect_failed', () => {
+      this.onError('Connection to server fails')
+      this.error = 'connect_failed'
+    })
+    this._socketClient.on('Reconnect_failed', () => {
+      this.onError('Reconnection to server fails')
+      this.error = 'Reconnect_failed'
+    })
   }
   _updateProgress(oEvent) {
     if (oEvent.lengthComputable) {
