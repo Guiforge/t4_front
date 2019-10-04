@@ -33,23 +33,12 @@ function Tar(progress) {
     },
   })
 
-  // this.stream.on('drain', () => {
-  //   if (this.globalSize) {
-  //     progress(undefined, ((this.written / this.globalSize) * 100).toFixed(2))
-  //   }
-  // })
-
-  // this.stream.on('data', () => {
-  //   if (this.globalSize) {
-  //     progress(undefined, ((this.written / this.globalSize) * 100).toFixed(2))
-  //   }
-  // })
-
+  // transform name of file 100 max length in ascii
   this.getName = (nameParam) => {
     const name = Buffer.from(nameParam).toString('ascii')
     const max = 97
     const patt = /\.[0-9a-z]+$/i
-    let ext = patt.exec(name)
+    let ext = patt.exec(name) // file extension
     if (!ext) {
       ext = ''
     } else {
@@ -58,7 +47,7 @@ function Tar(progress) {
 
     let pre
     if (ext.length >= max) {
-      throw Error(`Wrong Name file${name}`)
+      throw Error(`Wrong Name file${name}`) // if extension is too long
     } else if (ext.length) {
       pre = name.slice(0, -ext.length)
     } else {
@@ -68,6 +57,7 @@ function Tar(progress) {
     pre = pre.slice(0, max - ext.length)
     let ret = pre + ext
 
+    // Remove double
     // eslint-disable-next-line arrow-parens
     const find = this.names.find((el) => el.name === ret)
     if (!find) {
@@ -79,14 +69,14 @@ function Tar(progress) {
       }
       ret = pre + find.count + ext
     }
+
     return ret
   }
 
   this.go = () => {
     this.globalSize = nextMultiple(this.globalSize, this.recordSize)
     if (this.files.length) {
-      this.append(this.files.pop())
-      // this.pad()
+      this.append(this.files.pop()) // each file
     } else {
       this.end()
     }
@@ -161,13 +151,14 @@ function Tar(progress) {
 
   this.pad = () => {
     const padding = this.recordSize - this._pad
-    this.push(Buffer.alloc(padding))
+    this.push(Buffer.alloc(padding)) // send padding (fill with zero)
   }
 
   this.pushFile = (file) => {
     const fileStream = StreamFile.createReadStreamFile(file, undefined, true)
     fileStream.pipe(this.stream)
 
+    // On progress
     fileStream.on('data', (c) => {
       this._pad += c.length
       this.written += c.length
@@ -175,6 +166,7 @@ function Tar(progress) {
       progress(undefined, ((this.written / this.globalSize) * 100).toFixed(2))
     })
 
+    // when one file is send, send an other
     fileStream.on('fin', () => {
       fileStream.unpipe(this.stream)
       fileStream.push(null)

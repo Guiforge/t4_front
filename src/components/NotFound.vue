@@ -26,6 +26,7 @@ export default {
     }
   },
   methods: {
+    // return redom element from urls
     randomSrc() {
       const i = Math.floor(Math.random() * this.urls.length)
 

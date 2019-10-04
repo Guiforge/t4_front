@@ -1,8 +1,3 @@
-/*
- * tar-js
- * MIT (c) 2011 T. Jameson Little
- */
-
 const headerFormat = [
   {
     field: 'fileName',
@@ -70,7 +65,7 @@ const headerFormat = [
   },
 ]
 
-function formatHeader(data, cb) {
+function formatHeader(data) {
   const buffer = Buffer.alloc(512)
   let offset = 0
 
@@ -85,12 +80,8 @@ function formatHeader(data, cb) {
       offset += 1
     }
 
-    offset += value.length - i // space it out with nulls
+    offset += value.length - i
   })
-
-  if (typeof cb === 'function') {
-    return cb(buffer, offset)
-  }
   return buffer
 }
 

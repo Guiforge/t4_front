@@ -44,7 +44,6 @@
 
 <script>
 /* eslint-disable new-cap */
-// import stream from 'readable-stream'
 
 import formatSizeImp from '../utils/formatSize'
 import Download from '../utils/download'
@@ -53,9 +52,6 @@ import abTools from '../utils/abTools'
 import sendDownload from '../utils/sendDownload'
 import encrypt from '../zip-encrypt/encrypt'
 import streamSaver from '../utils/streamsaver'
-
-// import base64 from '../utils/base64'
-// import getUrl from '../utils/getUrl'
 
 export default {
   /* eslint-disable-next-line */
@@ -69,7 +65,6 @@ export default {
   data() {
     return {
       key64: null,
-      downloadClass: undefined,
       nonce: undefined,
       signNonce: undefined,
       keys: undefined,
@@ -103,7 +98,6 @@ export default {
         this.nonce = await Download.getNonce(this.id)
         await this.getMeta()
       } catch (error) {
-        // TODO not auth
         this.$router.push('/NotFound')
       }
     }
@@ -124,6 +118,8 @@ export default {
         'Do you really want to leave? you have cancel upload',
       )
     },
+
+    // Toast functions
     toastOpen(msg, type) {
       if (this.$buefy.toast) {
         // eslint-disable-next-line security/detect-non-literal-fs-filename
@@ -142,8 +138,11 @@ export default {
     formatSize(byte) {
       return formatSizeImp(byte, 10)
     },
+
+    // main function
     async download() {
       this.isLoading = true
+
       this.fileStream = streamSaver.createWriteStream('filename.tar.gz', {
         size: this.meta.sizeZip,
       })
@@ -152,6 +151,7 @@ export default {
         await this.keys.getKeyFile(),
         this.meta.files.ivFiles,
       )
+
       try {
         this.decipher.setAuthTag(this.meta.authTag)
         await sendDownload.download(
@@ -177,10 +177,13 @@ export default {
         this.fileStream.abort()
       }
     },
+
     async getKeys() {
       const keys = new Keys(new Uint8Array(abTools.b642b(this.key64)))
       return keys
     },
+
+    // functions get remote data
     async getMeta() {
       const metaEnc = await this.getRemoteData()
       this.meta = { sizeZip: metaEnc.sizeZip }

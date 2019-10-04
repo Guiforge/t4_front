@@ -1,7 +1,6 @@
 /* eslint-disable new-cap */
 import getUrl from '../utils/getUrl'
 import base64 from './base64'
-// import abTools from './abTools'
 
 async function getMeta(id, signNonce) {
   const signNonceB64 = await base64.encode(

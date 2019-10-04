@@ -160,6 +160,7 @@
         </div>
       </div>
     </article>
+
     <!-- Step Progress -->
     <div v-if="isLoading">
       <h2 v-if="progress.status && progress.status !== null">
@@ -169,12 +170,6 @@
       <progress :value="progress.value" class="progress is-info" max="100">
       </progress>
     </div>
-
-    <!-- <b-loading
-      :is-full-page="true"
-      :active.sync="isLoading"
-      :can-cancel="true"
-    ></b-loading> -->
   </div>
 </template>
 
@@ -182,7 +177,6 @@
 import crypto from 'crypto'
 import formatSizeImp from '../utils/formatSize'
 import Process from '../zip-encrypt/process'
-// import sender from '../utils/sendUpload'
 import getUrl from '../utils/getUrl'
 
 export default {
@@ -273,9 +267,6 @@ export default {
       return false
     },
     toastOpen(msg, type) {
-      // this.$buefy.snackbar.open(
-      //   "Default, positioned bottom-right with a green 'OK' button",
-      // )
       if (this.$buefy.toast) {
         // eslint-disable-next-line security/detect-non-literal-fs-filename
         this.$buefy.toast.open({
