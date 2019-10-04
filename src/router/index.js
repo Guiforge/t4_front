@@ -4,7 +4,7 @@ import getUrl from '../utils/getUrl'
 import HelloWorld from '../components/HelloWorld.vue'
 import Upload from '../components/Upload.vue'
 import Download from '../components/Download.vue'
-import NotFound from '../components/404.vue'
+import NotFound from '../components/NotFound.vue'
 import Files from '../components/Files.vue'
 
 Vue.use(Router)
@@ -14,7 +14,7 @@ export default new Router({
   routes: [
     {
       path: '*',
-      name: '404',
+      name: 'NotFound',
       component: NotFound,
     },
     {

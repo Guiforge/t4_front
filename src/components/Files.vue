@@ -41,6 +41,7 @@
 </template>
 
 <script>
+import crypto from 'crypto'
 import getUrl from '../utils/getUrl'
 
 export default {
@@ -55,7 +56,7 @@ export default {
   mounted() {
     if (localStorage) {
       this.owner = localStorage.getItem('owner')
-      this.filesStock = JSON.parse(localStorage.getItem('files'))
+      this.filesStock = JSON.parse(localStorage.getItem('files')) || []
     }
     if (!this.owner) {
       this.owner = crypto.randomBytes(256).toString('hex')

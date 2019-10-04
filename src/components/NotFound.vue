@@ -8,7 +8,7 @@
 <script>
 export default {
   /* eslint-disable-next-line */
-  name: '404',
+  name: 'NotFound',
   data() {
     return {
       urls: [
