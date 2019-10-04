@@ -163,7 +163,7 @@
         </div>
       </div>
     </article>
-    {{ owners }}
+    {{ owner }}
     <!-- Step Progress -->
     <div v-if="isLoading">
       <h2 v-if="progress.status && progress.status !== null">
@@ -183,6 +183,7 @@
 </template>
 
 <script>
+import crypto from 'crypto'
 import formatSizeImp from '../utils/formatSize'
 import Process from '../zip-encrypt/process'
 // import sender from '../utils/sendUpload'
@@ -206,7 +207,8 @@ export default {
         value: undefined,
       },
       dropFiles: [],
-      owners: [],
+      owner: undefined,
+      filesStock: undefined,
     }
   },
   beforeRouteLeave(to, from, next) {
@@ -225,11 +227,19 @@ export default {
   beforeDestroy() {
     window.removeEventListener('beforeunload', this.onBeforeUnload)
   },
+
   mounted() {
-    if (localStorage && localStorage.getItem('owners')) {
-      this.owners = JSON.parse(localStorage.getItem('owners'))
+    if (localStorage) {
+      this.owner = localStorage.getItem('owner')
+      this.filesStock = JSON.parse(localStorage.getItem('files'))
+    }
+    if (!this.owner) {
+      this.owner = crypto.randomBytes(256).toString('hex')
+      localStorage.setItem('owner', this.owner)
+      localStorage.setItem('files', '[]')
     }
   },
+
   methods: {
     onBeforeUnload(e) {
       if (this.isLoading && !this.confirmLeave()) {
@@ -285,9 +295,12 @@ export default {
     formatSize(byte) {
       return formatSizeImp(byte, 10)
     },
-    newOwner(newOwner) {
-      this.owners.push(newOwner)
-      localStorage.setItem('owners', JSON.stringify(this.owners))
+    addNewFile() {
+      const date = new Date(Date.now())
+      date.setDate(date.getDate() + this.option.days)
+      const objFile = { id: this.id, down: this.option.down, dayDiff: date }
+      this.filesStock.push(objFile)
+      this.localStorage.setItem('files', JSON.stringify(this.filesStock))
     },
     async process() {
       this.isLoading = true
@@ -296,21 +309,24 @@ export default {
           .getSecret()
           .toString('base64')
         this.processObject.opt = this.option
-        await this.processObject.launch(this.dropFiles, (status, value) => {
-          if (status) {
-            this.progress.status = status
-          }
-          if (value) {
-            this.progress.value = value
-          }
-        })
+        await this.processObject.launch(
+          this.dropFiles,
+          this.owner,
+          (status, value) => {
+            if (status) {
+              this.progress.status = status
+            }
+            if (value) {
+              this.progress.value = value
+            }
+          },
+        )
         this.url = `${getUrl.download()}${this.processObject.getIdFile()}#${secretRaw}`
         this.step = 2
-        this.newOwner(this.processObject.getOwner())
         this.toastSuccess('Sent !!')
       } catch (error) {
         this.isLoading = false
-        console.log(error)
+        console.log('ee', error)
         if (`${error.name}` === 'TypeError') {
           this.toastDanger('Intern Error')
         } else {

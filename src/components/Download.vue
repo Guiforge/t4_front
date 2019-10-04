@@ -147,6 +147,7 @@ export default {
       this.fileStream = streamSaver.createWriteStream('filename.tar.gz', {
         size: this.meta.sizeZip,
       })
+
       this.decipher = encrypt.createDecipherFile(
         await this.keys.getKeyFile(),
         this.meta.files.ivFiles,
@@ -170,7 +171,9 @@ export default {
           },
         )
       } catch (error) {
+        this.isLoading = false
         this.toastDanger(error)
+        this.decipher.close()
         this.fileStream.abort()
       }
     },

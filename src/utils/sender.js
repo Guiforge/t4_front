@@ -8,13 +8,11 @@ import util from 'util'
 function _onNothing() {}
 
 export default class Sender {
-  constructor(onProgress, onError) {
+  constructor(owner, onProgress, onError) {
     this.onProgress = onProgress || _onNothing
     this.onError = onError || _onNothing
     this.error = false
-  }
-  getOwner() {
-    return { id: this._id, owner: this._owner }
+    this.owner = owner
   }
   _initlistener() {
     this._socketClient.on('error', (error) => {
@@ -29,6 +27,10 @@ export default class Sender {
       this.onError('Reconnection to server fails')
       this.error = 'Reconnect_failed'
     })
+    this._socketClient.on('disconnect', () => {
+      this.onError('error server')
+      this.error = 'Reconnect_failed'
+    })
   }
   _updateProgress(oEvent) {
     if (oEvent.lengthComputable) {
@@ -40,12 +42,14 @@ export default class Sender {
   }
 
   async _senderMeta(meta) {
+    // eslint-disable-next-line no-param-reassign
+    meta.owner = this.owner
     return new Promise((resolve, reject) => {
       this._socketClient = io.connect(`${process.env.API_URL}`)
+      this._initlistener()
       this._socketClient.emit('meta', meta)
       this._socketClient.once('error', reject)
       this._socketClient.once('meta', (ret) => {
-        this._owner = ret.owner
         this._id = ret.id
         this._socketClient.removeEventListener('error', reject)
         resolve()

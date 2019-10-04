@@ -16,7 +16,7 @@ import Sender from '../utils/sender'
 export default class processData {
   constructor(options, onError) {
     this.keys = new KeysConstruct()
-    this._sender = new Sender(undefined, (e) => {
+    this._sender = new Sender(undefined, undefined, (e) => {
       if (onError) {
         onError(e)
       } else {
@@ -32,10 +32,6 @@ export default class processData {
       this.opt.down = options.down
     }
     // this.data = this.dataCreator()
-  }
-
-  getOwner() {
-    return this._sender.getOwner()
   }
 
   getIdFile() {
@@ -90,8 +86,9 @@ export default class processData {
     })
   }
 
-  async launch(files, progress) {
+  async launch(files, owner, progress) {
     this.files = files
+    this._sender.owner = owner
     await this.processMeta()
     try {
       await this.processFile(progress)
