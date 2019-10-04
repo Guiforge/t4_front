@@ -166,7 +166,7 @@ export default {
               this.$router.push('/')
               this.progress.status = 'Finish !!'
             } else {
-              this.progress.status = 'download ...'
+              this.progress.status = 'downloading ...'
             }
           },
         )

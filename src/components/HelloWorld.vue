@@ -5,11 +5,11 @@
         <div class="content" style="text-align: center">
           <h1>Welcome on Super File transfert !</h1>
           <p>
-            <b-button type="is-primary">
-              <router-link style="color:white" class="btn" to="/upload">
+            <router-link style="color:white" class="btn" to="/upload">
+              <b-button type="is-primary">
                 Upload your files
-              </router-link>
-            </b-button>
+              </b-button>
+            </router-link>
           </p>
         </div>
       </div>

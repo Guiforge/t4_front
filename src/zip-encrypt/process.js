@@ -14,15 +14,10 @@ import Sender from '../utils/sender'
 // * @param {Function} updateCb the update callback.
 // */
 export default class processData {
-  constructor(options, onError) {
+  constructor(options, onProgress) {
+    this.onProgress = onProgress
     this.keys = new KeysConstruct()
-    this._sender = new Sender(undefined, undefined, (e) => {
-      if (onError) {
-        onError(e)
-      } else {
-        throw e
-      }
-    })
+    this._sender = new Sender(undefined, this.onProgress)
     this.opt = {
       days: 1,
       down: 1,
@@ -86,12 +81,16 @@ export default class processData {
     })
   }
 
-  async launch(files, owner, progress) {
+  getError() {
+    return this._sender.error
+  }
+
+  async launch(files, owner) {
     this.files = files
     this._sender.owner = owner
     await this.processMeta()
     try {
-      await this.processFile(progress)
+      await this.processFile(this.onProgress)
     } catch (error) {
       console.log(error)
     }

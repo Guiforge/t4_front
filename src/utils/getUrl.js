@@ -6,6 +6,8 @@ const subPath = {
   getMeta: '/meta',
   uploadAuthTag: '/upload/authTag',
   getFile: '/download',
+  getInfo: '/info',
+  deleteFile: '/file/delete',
 }
 
 function download() {
@@ -26,6 +28,13 @@ function root(type) {
   return ret
 }
 
+function deleteFile(id) {
+  return `${process.env.API_URL}${subPath.deleteFile}/${id}`
+}
+
+function getInfo(id) {
+  return `${process.env.API_URL}${subPath.getInfo}/${id}`
+}
 function getFile(id) {
   return `${process.env.API_URL}${subPath.getFile}/${id}`
 }
@@ -53,7 +62,9 @@ function getNonce(id) {
 function getMeta(id) {
   return `${process.env.API_URL}${subPath.getMeta}/${id}`
 }
+
 export default {
+  deleteFile,
   download,
   subPath,
   upload,
@@ -64,4 +75,5 @@ export default {
   getFile,
   getFileSub,
   root,
+  getInfo,
 }

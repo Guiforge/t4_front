@@ -6,30 +6,32 @@ import util from 'util'
 // import getUrl from '../utils/getUrl'
 
 function _onNothing() {}
+const MAX_ATTEMPT = 5
 
 export default class Sender {
-  constructor(owner, onProgress, onError) {
+  constructor(owner, onProgress) {
     this.onProgress = onProgress || _onNothing
-    this.onError = onError || _onNothing
     this.error = false
     this.owner = owner
+    this._rejectCurrent = undefined
   }
   _initlistener() {
     this._socketClient.on('error', (error) => {
-      this.onError(error)
       this.error = error || 'error'
+      if (this._rejectCurrent) {
+        this._rejectCurrent()
+      }
     })
-    this._socketClient.on('connect_failed', () => {
-      this.onError('Connection to server fails')
-      this.error = 'connect_failed'
+    this._socketClient.on('connect_error', () => {
+      this.error = 'connect to server error'
+      if (this._attempt === MAX_ATTEMPT) {
+        if (this._rejectCurrent) {
+          this._rejectCurrent()
+        }
+      }
     })
-    this._socketClient.on('Reconnect_failed', () => {
-      this.onError('Reconnection to server fails')
-      this.error = 'Reconnect_failed'
-    })
-    this._socketClient.on('disconnect', () => {
-      this.onError('error server')
-      this.error = 'Reconnect_failed'
+    this._socketClient.on('reconnect_attempt', (attempt) => {
+      this._attempt = attempt
     })
   }
   _updateProgress(oEvent) {
@@ -37,7 +39,7 @@ export default class Sender {
       const percentComplete = (oEvent.loaded / oEvent.total) * 100
       this.onProgress('Meta', percentComplete)
     } else {
-      this.onProgress('Meta: impossible to handle %', 0)
+      this.onProgress('Meta: impossible to handle', 0)
     }
   }
 
@@ -45,24 +47,33 @@ export default class Sender {
     // eslint-disable-next-line no-param-reassign
     meta.owner = this.owner
     return new Promise((resolve, reject) => {
-      this._socketClient = io.connect(`${process.env.API_URL}`)
+      this._rejectCurrent = reject
+      this._socketClient = io(`${process.env.API_URL}`, {
+        reconnection: true,
+        reconnectionDelay: 200,
+        reconnectionDelayMax: 500,
+        reconnectionAttempts: MAX_ATTEMPT,
+      })
       this._initlistener()
       this._socketClient.emit('meta', meta)
       this._socketClient.once('error', reject)
       this._socketClient.once('meta', (ret) => {
         this._id = ret.id
         this._socketClient.removeEventListener('error', reject)
+        this._rejectCurrent = undefined
         resolve()
       })
     })
   }
 
   async send(type, data) {
-    if (this.error) {
+    if (this.error && type !== 'meta') {
       throw Error(this.error)
     }
     switch (type) {
       case 'meta':
+        this._attempt = 0
+        this.error = undefined
         return this._senderMeta(data)
       case 'file':
         return this._sendStreamFile()
@@ -92,31 +103,15 @@ export default class Sender {
 
   async _sendAuthFile(authTag) {
     return new Promise((resolve, reject) => {
+      this._rejectCurrent = reject
       this._socketClient.emit('authTag', authTag)
       this._socketClient.once('error', reject)
 
       this._socketClient.once('authTag', () => {
         this._socketClient.removeEventListener('error', reject)
+        this._rejectCurrent = undefined
         resolve()
       })
     })
-
-    // return new Promise((resolve, reject) => {
-    //   const xhr = new XMLHttpRequest()
-    //   xhr.onprogress = this._updateProgress.bind(this)
-    //   xhr.onerror = (err) => {
-    //     reject(`Error: ${err.target.status}`)
-    //   }
-    //   xhr.onload = (ev) => {
-    //     if (ev.target.status === 200) {
-    //       resolve('OK')
-    //     } else {
-    //       reject('Unable to send Meta')
-    //     }
-    //   }
-    //   xhr.open('PUT', getUrl.uploadAuthTag(this._id), true)
-    //   xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8')
-    //   xhr.send(JSON.stringify({ authTag, owner: this._owner }))
-    // })
   }
 }

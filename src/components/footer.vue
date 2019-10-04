@@ -2,7 +2,7 @@
   <footer class="footer">
     <div class="content has-text-centered">
       <p>
-        Project for <a href="42.fr"><strong>42 School</strong></a>
+        Project for <a href="https://42.fr"><strong>42 School</strong></a>
       </p>
     </div>
   </footer>

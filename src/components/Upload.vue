@@ -156,14 +156,10 @@
             <b-button v-if="!dropFiles.length" type="is-primary" disabled>
               Upload
             </b-button>
-            <br />
-            <br />
-            <br />
           </section>
         </div>
       </div>
     </article>
-    {{ owner }}
     <!-- Step Progress -->
     <div v-if="isLoading">
       <h2 v-if="progress.status && progress.status !== null">
@@ -201,7 +197,14 @@ export default {
         down: 1,
         days: 1,
       },
-      processObject: new Process(),
+      processObject: new Process(undefined, (status, value) => {
+        if (status) {
+          this.progress.status = status
+        }
+        if (value) {
+          this.progress.value = value
+        }
+      }),
       progress: {
         status: 'Initialisation',
         value: undefined,
@@ -296,11 +299,19 @@ export default {
       return formatSizeImp(byte, 10)
     },
     addNewFile() {
+      if (!localStorage) {
+        return
+      }
       const date = new Date(Date.now())
       date.setDate(date.getDate() + this.option.days)
-      const objFile = { id: this.id, down: this.option.down, dayDiff: date }
+      const objFile = {
+        id: this.processObject.getIdFile(),
+        createDate: new Date(Date.now()),
+        down: this.option.down,
+        dayDiff: date,
+      }
       this.filesStock.push(objFile)
-      this.localStorage.setItem('files', JSON.stringify(this.filesStock))
+      localStorage.setItem('files', JSON.stringify(this.filesStock))
     },
     async process() {
       this.isLoading = true
@@ -309,25 +320,17 @@ export default {
           .getSecret()
           .toString('base64')
         this.processObject.opt = this.option
-        await this.processObject.launch(
-          this.dropFiles,
-          this.owner,
-          (status, value) => {
-            if (status) {
-              this.progress.status = status
-            }
-            if (value) {
-              this.progress.value = value
-            }
-          },
-        )
+        await this.processObject.launch(this.dropFiles, this.owner)
         this.url = `${getUrl.download()}${this.processObject.getIdFile()}#${secretRaw}`
+        this.addNewFile()
         this.step = 2
         this.toastSuccess('Sent !!')
       } catch (error) {
+        console.log(error)
         this.isLoading = false
-        console.log('ee', error)
-        if (`${error.name}` === 'TypeError') {
+        if (this.processObject.getError()) {
+          this.toastDanger(this.processObject.getError())
+        } else if (!error || `${error.name}` === 'TypeError') {
           this.toastDanger('Intern Error')
         } else {
           this.toastDanger(`${error}`)

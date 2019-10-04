@@ -5,6 +5,7 @@ import HelloWorld from '../components/HelloWorld.vue'
 import Upload from '../components/Upload.vue'
 import Download from '../components/Download.vue'
 import NotFound from '../components/404.vue'
+import Files from '../components/Files.vue'
 
 Vue.use(Router)
 const subPath = getUrl.subPath
@@ -30,6 +31,12 @@ export default new Router({
       path: `${subPath.download}:id`,
       name: 'Download',
       component: Download,
+      props: true,
+    },
+    {
+      path: '/files',
+      name: 'Files',
+      component: Files,
       props: true,
     },
   ],
