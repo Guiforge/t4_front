@@ -30,7 +30,7 @@
           </div>
           <div v-if="meta && !isLoading">
             <div>
-              file: file.zip
+              file: files.tar.gz
               <br />
               size: {{ formatSize(meta.sizeZip) }}
             </div>
@@ -143,7 +143,7 @@ export default {
     async download() {
       this.isLoading = true
 
-      this.fileStream = streamSaver.createWriteStream('filename.tar.gz', {
+      this.fileStream = streamSaver.createWriteStream('files.tar.gz', {
         size: this.meta.sizeZip,
       })
 
