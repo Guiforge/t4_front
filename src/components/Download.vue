@@ -92,7 +92,10 @@ export default {
   created() {
     window.addEventListener('beforeunload', this.onBeforeUnload)
 
-    const init = async () => {
+    this.init()
+  },
+  methods: {
+    async init() {
       try {
         this.key64 = this.$router.currentRoute.hash.substr(1)
         this.nonce = await Download.getNonce(this.id)
@@ -100,10 +103,7 @@ export default {
       } catch (error) {
         this.$router.push('/NotFound')
       }
-    }
-    init()
-  },
-  methods: {
+    },
     onBeforeUnload(e) {
       if (this.isLoading && !this.confirmLeave()) {
         // Cancel the event
@@ -173,8 +173,10 @@ export default {
       } catch (error) {
         this.isLoading = false
         this.toastDanger(error)
-        this.decipher.close()
+        this.decipher.once('error', () => {})
+        this.decipher.destroy()
         this.fileStream.abort()
+        this.$router.push('/expire')
       }
     },
 

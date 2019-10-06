@@ -6,6 +6,7 @@ import Upload from '../components/Upload.vue'
 import Download from '../components/Download.vue'
 import NotFound from '../components/NotFound.vue'
 import Files from '../components/Files.vue'
+import Expire from '../components/Expire.vue'
 
 Vue.use(Router)
 const subPath = getUrl.subPath
@@ -38,6 +39,12 @@ export default new Router({
       name: 'Files',
       component: Files,
       props: true,
+    },
+    {
+      path: '/expire',
+      name: 'Expire',
+      component: Expire,
+      prop: true,
     },
   ],
 })
