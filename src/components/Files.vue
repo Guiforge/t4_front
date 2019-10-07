@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <h1>FILES</h1>
-    <p v-if="filesStock">You don't have file</p>
+    <p v-if="!filesStock || !filesStock.length">You don't have file</p>
     <div v-for="(file, index) in filesStock" :key="index">
       <b-collapse class="card" aria-id="contentIdForA11y3">
         <div
