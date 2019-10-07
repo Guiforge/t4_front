@@ -8,9 +8,9 @@ import StreamFile from '../utils/fileReaderStream'
 
 const header = require('./header')
 
-function pad(numParm, bytes, base) {
+function pad(numParm, bytes) {
   let num = numParm
-  num = num.toString(base || 8)
+  num = num.toString(8)
   // eslint-disable-next-line no-mixed-operators
   return '000000000000'.substr(num.length + 12 - bytes) + num
 }
@@ -19,10 +19,14 @@ function nextMultiple(number, quo) {
   return number + (quo - (number % quo))
 }
 
-function Tar(progress) {
+function Tar(progress, onError) {
   this.written = 0
   this.globalSize = 0
   this.recordSize = 512
+  this.onError = (err) => {
+    onError(err)
+    throw err
+  }
   this.files = []
   this.names = []
   this._pad = 0
@@ -47,7 +51,7 @@ function Tar(progress) {
 
     let pre
     if (ext.length >= max) {
-      throw Error(`Wrong Name file${name}`) // if extension is too long
+      this.onError(Error(`Wrong Name file${name}`)) // if extension is too long
     } else if (ext.length) {
       pre = name.slice(0, -ext.length)
     } else {
@@ -65,7 +69,7 @@ function Tar(progress) {
     } else {
       find.count += 1
       if (find.count > 999) {
-        throw Error(`too many similar names:${name}`)
+        this.onError(Error(`too many similar names:${name}`))
       }
       ret = pre + find.count + ext
     }
@@ -155,29 +159,32 @@ function Tar(progress) {
   }
 
   this.pushFile = (file) => {
-    const fileStream = StreamFile.createReadStreamFile(file, undefined, true)
-    fileStream.pipe(this.stream)
+    if (file.size) {
+      const fileStream = StreamFile.createReadStreamFile(file, undefined, true)
+      fileStream.pipe(this.stream)
+      // On progress
+      fileStream.on('data', (c) => {
+        this._pad += c.length
+        this.written += c.length
+        this._pad = this._pad % this.recordSize
+        progress(undefined, ((this.written / this.globalSize) * 100).toFixed(2))
+      })
 
-    // On progress
-    fileStream.on('data', (c) => {
-      this._pad += c.length
-      this.written += c.length
-      this._pad = this._pad % this.recordSize
-      progress(undefined, ((this.written / this.globalSize) * 100).toFixed(2))
-    })
-
-    // when one file is send, send an other
-    fileStream.on('fin', () => {
-      fileStream.unpipe(this.stream)
-      fileStream.push(null)
-      this.pad()
+      // when one file is send, send an other
+      fileStream.on('fin', () => {
+        fileStream.unpipe(this.stream)
+        fileStream.push(null)
+        this.pad()
+        this.go()
+      })
+    } else {
       this.go()
-    })
+    }
   }
 }
 
-export default async function zipFiles(files, progress) {
-  const tar = new Tar(progress)
+export default async function zipFiles(files, progress, onError) {
+  const tar = new Tar(progress, onError)
 
   files.forEach((file) => {
     tar.file(file)

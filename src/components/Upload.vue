@@ -93,7 +93,8 @@
                     aria-controls="contentIdForA11y3"
                   >
                     <p class="card-header-title">
-                      Download file
+                      Number of files : {{ dropFiles.length }} --
+                      {{ globalSize() }}
                     </p>
                     <a class="card-header-icon">
                       <b-icon :icon="props.open ? 'caret-down' : 'caret-up'">
@@ -174,6 +175,8 @@
 </template>
 
 <script>
+/* eslint-disable security/detect-non-literal-fs-filename */
+
 import crypto from 'crypto'
 import formatSizeImp from '../utils/formatSize'
 import Process from '../zip-encrypt/process'
@@ -268,7 +271,6 @@ export default {
     },
     toastOpen(msg, type) {
       if (this.$buefy.toast) {
-        // eslint-disable-next-line security/detect-non-literal-fs-filename
         this.$buefy.toast.open({
           message: msg,
           type,
@@ -282,12 +284,28 @@ export default {
     },
     toastDanger(msg) {
       this.toastOpen(msg, 'is-danger')
+      this.$buefy.snackbar.open({
+        message: 'Do you want to try again ?',
+        type: 'is-warning',
+        position: 'is-bottom-right',
+        actionText: 'Retry',
+        onAction: () => {
+          this.process()
+        },
+      })
     },
     deleteDropFile(index) {
       this.dropFiles.splice(index, 1)
     },
     formatSize(byte) {
       return formatSizeImp(byte, 10)
+    },
+    globalSize() {
+      let acc = 0
+      this.dropFiles.forEach((file) => {
+        acc += file.size
+      })
+      return this.formatSize(acc)
     },
     addNewFile() {
       if (!localStorage) {
@@ -304,6 +322,16 @@ export default {
       this.filesStock.push(objFile)
       localStorage.setItem('files', JSON.stringify(this.filesStock))
     },
+    onErrorProcess(error) {
+      if (this.processObject.getError()) {
+        this.toastDanger(this.processObject.getError())
+      } else if (!error || `${error.name}` === 'TypeError') {
+        this.toastDanger('Intern Error')
+      } else {
+        this.toastDanger(`${error}`)
+      }
+      this.isLoading = false
+    },
     async process() {
       this.isLoading = true
       try {
@@ -311,21 +339,17 @@ export default {
           .getSecret()
           .toString('base64')
         this.processObject.opt = this.option
-        await this.processObject.launch(this.dropFiles, this.owner)
+        await this.processObject.launch(
+          this.dropFiles,
+          this.owner,
+          this.onErrorProcess,
+        )
         this.url = `${getUrl.download()}${this.processObject.getIdFile()}#${secretRaw}`
         this.addNewFile()
         this.step = 2
         this.toastSuccess('Sent !!')
       } catch (error) {
-        console.log(error)
-        this.isLoading = false
-        if (this.processObject.getError()) {
-          this.toastDanger(this.processObject.getError())
-        } else if (!error || `${error.name}` === 'TypeError') {
-          this.toastDanger('Intern Error')
-        } else {
-          this.toastDanger(`${error}`)
-        }
+        this.onErrorProcess(error)
       }
       this.isLoading = false
     },

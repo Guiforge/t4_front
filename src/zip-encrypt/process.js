@@ -55,8 +55,8 @@ export default class processData {
     await this._sender.send('meta', meta)
   }
 
-  async processFile(progress) {
-    const streamZip = await zipFiles(this.files, progress)
+  async processFile(progress, onError) {
+    const streamZip = await zipFiles(this.files, progress, onError)
     const cipher = encrypt.createCipherFile(
       await this.keys.getKeyFile(),
       this.keys.getIvFile(),
@@ -67,6 +67,7 @@ export default class processData {
       .pipe(gzip)
       .pipe(cipher)
       .pipe(sender)
+
     return new Promise((resolve, reject) => {
       sender.once('finish', () => {
         this._sender
@@ -85,14 +86,10 @@ export default class processData {
     return this._sender.error
   }
 
-  async launch(files, owner) {
+  async launch(files, owner, onError) {
     this.files = files
     this._sender.owner = owner
     await this.processMeta()
-    try {
-      await this.processFile(this.onProgress)
-    } catch (error) {
-      console.log(error)
-    }
+    await this.processFile(this.onProgress, onError)
   }
 }
