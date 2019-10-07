@@ -1,5 +1,5 @@
 <template>
-  <b-navbar>
+  <b-navbar id="header">
     <template slot="brand">
       <b-navbar-item
         :to="{ path: '/' }"
@@ -26,4 +26,14 @@ export default {
   name: 'Header',
 }
 </script>
-<style scoped></style>
+<style scoped>
+#header {
+  width: 98%;
+  margin: auto;
+  /* border-style: solid;
+  border-width: thin;
+  border-color: gray; */
+  margin-bottom: 2em;
+  box-shadow: 10px 10px 5px #e6e6e6;
+}
+</style>

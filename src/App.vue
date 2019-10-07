@@ -30,4 +30,7 @@ export default {
   text-align: center;
   color: #2c3e50;
 }
+html {
+  background-image: url('https://d2v9y0dukr6mq2.cloudfront.net/video/thumbnail/JETFf6K/simple-background-diamond-s-color-4k_vhlemocxvl__F0000.png');
+}
 </style>

@@ -14,6 +14,7 @@
           <p class="card-header-title">
             Archive {{ index }} --
             {{ new Date(file.createDate).toLocaleDateString() }}
+            {{ new Date(file.createDate).toLocaleTimeString() }}
           </p>
           <a class="card-header-icon">
             <b-icon :icon="props.open ? 'caret-down' : 'caret-up'"> </b-icon>
@@ -27,10 +28,7 @@
           </div>
         </div>
         <footer class="card-footer">
-          <b-button
-            class="card-footer-item"
-            @click="confirmCustomDelete(file.id)"
-          >
+          <b-button class="card-footer-item" @click="confirmDelete(file.id)">
             Delete
           </b-button>
         </footer>
@@ -85,7 +83,7 @@ export default {
     updateLocalStorage() {
       localStorage.setItem('files', JSON.stringify(this.filesStock))
     },
-    confirmCustomDelete(id) {
+    confirmDelete(id) {
       this.$buefy.dialog.confirm({
         title: 'Deleting file',
         message:
@@ -124,16 +122,13 @@ export default {
     },
     checkInfo(file) {
       const xhr = new XMLHttpRequest()
-      xhr.onerror = () => {
-        this.deleteOne(file.id)
-      }
       xhr.onload = (ev) => {
         if (ev.target.status === 200) {
           const rep = JSON.parse(ev.target.response)
           // eslint-disable-next-line no-param-reassign
           file.down = rep.down
           this.updateLocalStorage()
-        } else {
+        } else if (ev.target.status !== 429) {
           this.deleteOne(file.id)
         }
       }
