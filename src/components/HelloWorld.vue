@@ -3,7 +3,7 @@
     <article class="media">
       <div class="media-content">
         <div class="content" style="text-align: center">
-          <h1>Welcome on Super File transfert !</h1>
+          <h1>Welcome on Super File Transfert !</h1>
           <p>
             <router-link style="color:white" class="btn" to="/upload">
               <b-button type="is-primary">
