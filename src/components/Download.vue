@@ -1,19 +1,10 @@
 `<template>
   <section>
-    <b-collapse class="card" aria-id="contentIdForA11y3">
-      <div
-        slot="trigger"
-        slot-scope="props"
-        class="card-header"
-        role="button"
-        aria-controls="contentIdForA11y3"
-      >
+    <div class="card" aria-id="contentIdForA11y3">
+      <div slot="trigger" class="card-header">
         <p class="card-header-title">
           Download file
         </p>
-        <a class="card-header-icon">
-          <b-icon :icon="props.open ? 'caret-down' : 'caret-up'"> </b-icon>
-        </a>
       </div>
       <div class="card-content">
         <div class="content">
@@ -35,10 +26,49 @@
               size: {{ formatSize(meta.sizeZip) }}
             </div>
             <b-button @click="download">Download</b-button>
+            <br />
+            <br />
+
+            <div v-if="!isLoadingMeta">
+              <b-collapse
+                :open="false"
+                class="card"
+                aria-id="contentIdForA11y3"
+              >
+                <div
+                  slot="trigger"
+                  slot-scope="props"
+                  class="card-header"
+                  role="button"
+                  aria-controls="contentIdForA11y3"
+                >
+                  <p class="card-header-title">
+                    Number of files : {{ meta.files.filesName.length }}
+                  </p>
+                  <a class="card-header-icon">
+                    <b-icon :icon="props.open ? 'caret-down' : 'caret-up'">
+                    </b-icon>
+                  </a>
+                </div>
+                <div class="card-content">
+                  <div class="content">
+                    <b-taglist>
+                      <b-tag
+                        v-for="(name, index) in meta.files.filesName"
+                        :key="index"
+                        type="is-info"
+                      >
+                        {{ name }}
+                      </b-tag>
+                    </b-taglist>
+                  </div>
+                </div>
+              </b-collapse>
+            </div>
           </div>
         </div>
       </div>
-    </b-collapse>
+    </div>
   </section>
 </template>
 
@@ -64,6 +94,7 @@ export default {
   },
   data() {
     return {
+      isLoadingMeta: true,
       key64: null,
       nonce: undefined,
       signNonce: undefined,
@@ -191,6 +222,7 @@ export default {
       this.meta = { sizeZip: metaEnc.sizeZip }
       this.meta.files = await this.decryptMeta(metaEnc)
       this.meta.authTag = metaEnc.authTag
+      this.isLoadingMeta = false
     },
     async decryptMeta(meta) {
       return encrypt.decryptMeta(

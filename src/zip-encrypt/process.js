@@ -43,7 +43,11 @@ export default class processData {
     }
     */
     const meta = {
-      enc: { filesName: this.files, ivFiles: this.keys.getIvFile() },
+      enc: {
+        // eslint-disable-next-line arrow-parens
+        filesName: this.files.flatMap((f) => f.name),
+        ivFiles: this.keys.getIvFile(),
+      },
       ivMeta: this.keys.getIvMeta(),
       keyAuth: await this.keys.getKeyAuth(),
       days: this.opt.days,
