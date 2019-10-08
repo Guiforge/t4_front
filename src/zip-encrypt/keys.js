@@ -51,7 +51,7 @@ export default class KeysConstructor {
     this._KeyFileProm = _KeyCreate(deriveKey, 'KeyFile', 32 * 8)
     this._KeyMetaProm = _KeyCreate(deriveKey, 'KeyMeta', 32 * 8)
     this._KeyAuth = cryptoBro
-      .createHmac('sha512', 'password')
+      .createHmac('sha512', 'SignKey')
       .update(deriveKey)
       .digest()
   }

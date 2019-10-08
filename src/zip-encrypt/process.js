@@ -34,14 +34,6 @@ export default class processData {
   }
 
   async processMeta() {
-    /*
-    meta: {
-      enc: {enc: } { filesName: this.files, ivFiles: ivFiles } //encrypt data
-      ivMeta:
-      keyAuth
-      options
-    }
-    */
     const meta = {
       enc: {
         // eslint-disable-next-line arrow-parens
