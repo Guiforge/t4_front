@@ -140,7 +140,7 @@
                 <b-numberinput
                   v-model="option.down"
                   min="1"
-                  max="10"
+                  max="10000"
                   controls-rounded
                 >
                 </b-numberinput>
