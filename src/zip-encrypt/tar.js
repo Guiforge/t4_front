@@ -87,8 +87,8 @@ function Tar(progress, onError) {
   }
 
   this.end = () => {
-    this.pad(true)
-    this.pad(true)
+    this.pushPad(true)
+    this.pushPad(true)
     this.stream.end()
   }
 
@@ -141,7 +141,6 @@ function Tar(progress, onError) {
     this.written += headerArr.length
 
     this.pushFile(file)
-
     return this.out
   }
 
@@ -153,9 +152,13 @@ function Tar(progress, onError) {
     progress(undefined, ((this.written / this.globalSize) * 100).toFixed(2))
   }
 
-  this.pad = () => {
+  // send padding (fill with zero)
+  this.pushPad = (force) => {
+    if (!force && !this._pad) {
+      return
+    }
     const padding = this.recordSize - this._pad
-    this.push(Buffer.alloc(padding)) // send padding (fill with zero)
+    this.push(Buffer.alloc(padding))
   }
 
   this.pushFile = (file) => {
@@ -174,7 +177,7 @@ function Tar(progress, onError) {
       fileStream.on('fin', () => {
         fileStream.unpipe(this.stream)
         fileStream.push(null)
-        this.pad()
+        this.pushPad()
         this.go()
       })
     } else {
