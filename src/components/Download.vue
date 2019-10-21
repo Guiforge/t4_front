@@ -202,6 +202,7 @@ export default {
           },
         )
       } catch (error) {
+        console.error(error)
         this.isLoading = false
         this.toastDanger(error)
         this.decipher.once('error', () => {})

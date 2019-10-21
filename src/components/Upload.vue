@@ -311,16 +311,21 @@ export default {
       if (!localStorage) {
         return
       }
-      const date = new Date(Date.now())
-      date.setDate(date.getDate() + this.option.days)
-      const objFile = {
-        id: this.processObject.getIdFile(),
-        createDate: new Date(Date.now()),
-        down: this.option.down,
-        dayDiff: date,
+      try {
+        const date = new Date(Date.now())
+        date.setDate(date.getDate() + this.option.days)
+        const objFile = {
+          id: this.processObject.getIdFile(),
+          createDate: new Date(Date.now()),
+          down: this.option.down,
+          dayDiff: date,
+        }
+        this.filesStock.push(objFile)
+        localStorage.setItem('files', JSON.stringify(this.filesStock))
+      } catch (error) {
+        console.error(error)
+        console.log('Cannot save file in local storage')
       }
-      this.filesStock.push(objFile)
-      localStorage.setItem('files', JSON.stringify(this.filesStock))
     },
     onErrorProcess(error) {
       if (this.processObject.getError()) {
@@ -349,7 +354,9 @@ export default {
         this.step = 2
         this.toastSuccess('Sent !!')
       } catch (error) {
-        this.onErrorProcess(error)
+        if (this.step !== 2) {
+          this.onErrorProcess(error)
+        }
       }
       this.isLoading = false
     },
