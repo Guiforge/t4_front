@@ -48,7 +48,7 @@ export default {
   data() {
     return {
       owner: undefined,
-      filesStock: undefined,
+      filesStock: [],
     }
   },
   mounted() {
@@ -61,9 +61,11 @@ export default {
       localStorage.setItem('owner', this.owner)
       localStorage.setItem('files', '[]')
     }
-    this.filesStock.forEach((file) => {
-      this.checkInfo(file)
-    })
+    if (this.filesStock) {
+      this.filesStock.forEach((file) => {
+        this.checkInfo(file)
+      })
+    }
   },
   methods: {
     snackOpen(msg, type) {

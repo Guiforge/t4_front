@@ -208,7 +208,7 @@ export default {
       },
       dropFiles: [],
       owner: undefined,
-      filesStock: undefined,
+      filesStock: [],
     }
   },
   beforeRouteLeave(to, from, next) {
